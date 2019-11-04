@@ -45,7 +45,7 @@ public class DaoProcessor extends AbstractProcessor{
         processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,"---> FOUND @Dao at ");
         
         return true;
-    }
+    }  
     
    
     
