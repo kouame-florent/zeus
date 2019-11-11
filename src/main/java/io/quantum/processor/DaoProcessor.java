@@ -11,22 +11,26 @@ import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
+import io.quantum.annotation.WithDao;
 
 /**
  *
  * @author root
  */
 
-@SupportedAnnotationTypes("io.quantum.annotation.Dao")
+@SupportedAnnotationTypes({
+    "io.quantum.annotation.WithDao"
+})
 @SupportedSourceVersion(SourceVersion.RELEASE_11)
 public class DaoProcessor extends AbstractProcessor{
     
@@ -35,20 +39,61 @@ public class DaoProcessor extends AbstractProcessor{
     private Filer filer;
     private Messager messager;
     
+    EntityDaoFactory entityDaoFactory;
+    EntityDaoImplFactory entityDaoImplFactory;
+    
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv){ 
         super.init(processingEnv);
+        typeUtils = processingEnv.getTypeUtils();
+        elementUtils = processingEnv.getElementUtils();
+        filer = processingEnv.getFiler();
+        messager = processingEnv.getMessager();
+        
+        
+        entityDaoFactory = new EntityDaoFactory(filer, messager);
+        entityDaoImplFactory = new EntityDaoImplFactory(filer, messager);
     }
     
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,"---> FOUND @Dao at ");
+               
+        for (Element annotatedElement : roundEnv.getElementsAnnotatedWith(WithDao.class)) {
+            if(annotatedElement.getKind() != ElementKind.CLASS){
+                error(annotatedElement, "Only classes can be annotated with @%s", WithDao.class.getSimpleName());
+                return true;
+            }else{
+//                AnnotatedClass annotatedClass = new AnnotatedClass((TypeElement)annotatedElement);
+//                log(annotatedElement,"[Zeus] FOUND @Dao AT %s:",annotatedClass.getAnnotatedElement());
+                
+                entityDaoFactory.add(annotatedElement);
+                entityDaoImplFactory.add(annotatedElement);
+                
+            }
+        }
+    
+        GenericDaoFactory daoFactory = new GenericDaoFactory();
+        daoFactory.generateCode(filer, processingEnv);
+        
+        GenericDaoImplFActory daoImplFActory = new GenericDaoImplFActory();
+        daoImplFActory.generateCode(filer, processingEnv);
+        
+        entityDaoFactory.generateCode(processingEnv);
+        entityDaoImplFactory.generateCode(processingEnv);
+        
+        entityDaoFactory.clearAnnotatedElements();
+        entityDaoImplFactory.clearAnnotatedElements();
         
         return true;
+        
     }  
     
-   
+    private void error(Element e, String msg, Object... args) {
+        messager.printMessage(Diagnostic.Kind.ERROR,String.format(msg, args),e);
+    }
     
-    
-    
+   private void log(Element e, String msg, Object... args) {
+        messager.printMessage(Diagnostic.Kind.NOTE,String.format(msg, args),e);
+    }
+
 }
