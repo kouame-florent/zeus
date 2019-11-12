@@ -19,9 +19,11 @@ import java.util.List;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.type.DeclaredType;
 import javax.tools.Diagnostic;
 
 /**
@@ -32,6 +34,7 @@ public class EntityDaoImplFactory {
     
     private final Filer filer;
     private final Messager messager;
+    private static final String ENTITY_ANNOTATION_FQCN = "javax.persistence.Entity";
         
     public List<Element> annotatedElements = new ArrayList<>();
     public List<Element> badAnnotatedElements = new ArrayList<>();
@@ -97,6 +100,13 @@ public class EntityDaoImplFactory {
                 .indent("    ")
                 .build();
    }
+    
+    private boolean isEntity(Element element){
+        return element.getAnnotationMirrors()
+                .stream().map(AnnotationMirror::getAnnotationType)
+                .map(DeclaredType::toString)
+                .anyMatch(n -> n.equalsIgnoreCase("javax.persistence.Entity"));
+    }
    
    public void generateCode(ProcessingEnvironment processingEnv){
         annotatedElements.stream()
