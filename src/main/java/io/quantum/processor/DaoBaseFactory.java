@@ -21,7 +21,7 @@ import javax.tools.Diagnostic;
  *
  * @author root
  */
-public abstract class EntityBaseFactory {
+public abstract class DaoBaseFactory {
     
     private final Filer filer;
     private final Messager messager;
@@ -30,7 +30,7 @@ public abstract class EntityBaseFactory {
     public List<Element> annotatedElements = new ArrayList<>();
     public List<Element> badAnnotatedElements = new ArrayList<>();
 
-    public EntityBaseFactory(Filer filer, Messager messager) {
+    public DaoBaseFactory(Filer filer, Messager messager) {
         this.filer = filer;
         this.messager = messager;
     }

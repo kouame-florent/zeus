@@ -21,7 +21,7 @@ import javax.lang.model.element.Modifier;
  *
  * @author root
  */
-public class EntityDaoImplFactory extends EntityBaseFactory{
+public class EntityDaoImplFactory extends DaoBaseFactory{
     
     public EntityDaoImplFactory(Filer filer, Messager messager) {
         super(filer, messager);
