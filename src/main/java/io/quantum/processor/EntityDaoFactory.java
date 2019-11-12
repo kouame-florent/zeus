@@ -11,11 +11,18 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
+import javax.tools.Diagnostic;
+import javax.tools.FileObject;
+import javax.tools.StandardLocation;
 
 /**
  *
@@ -65,5 +72,20 @@ public class EntityDaoFactory extends DaoBaseFactory{
                 .build();
    }
     
+    @Override
+    void writeFile(JavaFile javaFile,ProcessingEnvironment processingEnv){
+        try {
+            
+            FileObject jfo = filer.getResource(StandardLocation.CLASS_OUTPUT, "io.quantum.dao", "ProjectDAO");
+            System.out.printf("[Zeus] RESOURCES! %s",jfo.toUri());
+           if(!Files.exists(Paths.get(jfo.toUri())) ){
+               javaFile.writeTo(filer);
+           }
+             
+        } catch (IOException ex) {
+            System.out.printf("[Zeus] File already generated! %s",ex);
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,"[Zeus] File already generated! ");
+        }
+    }
  
 }
