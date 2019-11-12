@@ -16,6 +16,9 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.type.DeclaredType;
 import javax.tools.Diagnostic;
+import javax.tools.FileObject;
+import javax.tools.JavaFileObject;
+import javax.tools.StandardLocation;
 
 /**
  *
@@ -52,10 +55,14 @@ public abstract class DaoBaseFactory {
             .forEach(jf -> writeFile(jf, processingEnv));
     }
     
-     public void writeFile(JavaFile javaFile,ProcessingEnvironment processingEnv){
+    void writeFile(JavaFile javaFile,ProcessingEnvironment processingEnv){
         try {
+            
+            FileObject jfo = filer.getResource(StandardLocation.SOURCE_OUTPUT, "io.quantum.dao", "ProjectDAO");
+            System.out.printf("[Zeus] RESOURCES! %s",jfo.getName());
             javaFile.writeTo(filer);
         } catch (IOException ex) {
+            System.out.printf("[Zeus] File already generated! %s",ex);
             processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,"[Zeus] File already generated! ");
         }
     }
