@@ -110,6 +110,7 @@ public class EntityDaoImplFactory {
    
    public void generateCode(ProcessingEnvironment processingEnv){
         annotatedElements.stream()
+            .filter(this::isEntity)
             .map(e -> buildCode(e))
             .forEach(jf -> writeFile(jf, processingEnv));
     }
