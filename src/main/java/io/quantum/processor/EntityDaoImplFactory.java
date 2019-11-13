@@ -56,8 +56,8 @@ public class EntityDaoImplFactory extends DaoBaseFactory{
         String entityDaoImplName = className(entityName);
         String entityDaoName = interfaceName(entityName);
         
-        ClassName genricDaoImpl = ClassName.get("io.quantum.dao", "GenericDAOImpl");
-        ClassName entityDaoClassName = ClassName.get("io.quantum.dao",entityDaoName );
+        ClassName genricDaoImpl = ClassName.get(PackageName.GENERIC_DAO_IMPL.pkgName(), "GenericDAOImpl");
+        ClassName entityDaoClassName = ClassName.get(PackageName.ENTITY_DAO.pkgName(),entityDaoName );
         TypeName entityTypeName = ClassName.get(element.asType());
               
         ClassName statelessClassName = ClassName.get("javax.ejb", "Stateless");
@@ -76,7 +76,7 @@ public class EntityDaoImplFactory extends DaoBaseFactory{
                 .addMethod(constructor)
                 .build();
         
-        return JavaFile.builder("io.quantum.dao.impl", entityDao)
+        return JavaFile.builder(PackageName.ENTITY_DAO_IMPL.pkgName(), entityDao)
                 .skipJavaLangImports(true)
                 .indent("    ")
                 .build();

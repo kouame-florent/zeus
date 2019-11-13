@@ -26,7 +26,7 @@ import javax.tools.Diagnostic;
  */
 public class GenericDaoImplFActory {
     
-    ClassName genricDao = ClassName.get("io.quantum.dao", "GenericDAO");
+    ClassName genricDao = ClassName.get(PackageName.GENERIC_DAO.pkgName(), "GenericDAO");
    
     TypeVariableName entityTypeVarName = TypeVariableName.get("E");
     TypeVariableName idTypeVarName = TypeVariableName.get("ID");
@@ -119,7 +119,7 @@ public class GenericDaoImplFActory {
                 .build();
       
         
-        return JavaFile.builder("io.quantum.dao", genericDaoImpl)
+        return JavaFile.builder(PackageName.GENERIC_DAO_IMPL.pkgName(), genericDaoImpl)
                 .skipJavaLangImports(true)
                 .indent("    ")
                 .build();

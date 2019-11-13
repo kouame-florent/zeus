@@ -74,7 +74,8 @@ public class DaoProcessor extends AbstractProcessor{
         
         roundEnv.getElementsAnnotatedWithAny(Set.of(WithDao.class, Sealed.class))
                 .stream()
-                .filter(element -> element.getKind() == ElementKind.CLASS)
+                .filter(element -> (element.getKind() == ElementKind.CLASS) 
+                        || (element.getKind() == ElementKind.INTERFACE))
                 .forEach(e -> {  
                     entityDaoFactory.add(e);
                     entityDaoImplFactory.add(e);
