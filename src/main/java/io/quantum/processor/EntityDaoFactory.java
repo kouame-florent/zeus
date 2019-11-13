@@ -52,10 +52,12 @@ public class EntityDaoFactory extends DaoBaseFactory{
        return elementSimpleName + "DAO";
    }
        
+    String entityDaoName; 
+   
     @Override
     JavaFile buildCode(Element element) {
         
-        String entityDaoName = interfaceName(element.getSimpleName().toString());
+        entityDaoName = interfaceName(element.getSimpleName().toString());
         ClassName genricDao = ClassName.get("io.quantum.dao", "GenericDAO");
          
         TypeName entityTypeName = TypeName.get(element.asType());
@@ -75,13 +77,8 @@ public class EntityDaoFactory extends DaoBaseFactory{
     @Override
     void writeFile(JavaFile javaFile,ProcessingEnvironment processingEnv){
         try {
+            javaFile.writeTo(filer);
             
-            FileObject jfo = filer.getResource(StandardLocation.CLASS_OUTPUT, "io.quantum.dao", "ProjectDAO");
-            System.out.printf("[Zeus] RESOURCES! %s",jfo.toUri());
-           if(!Files.exists(Paths.get(jfo.toUri())) ){
-               javaFile.writeTo(filer);
-           }
-             
         } catch (IOException ex) {
             System.out.printf("[Zeus] File already generated! %s",ex);
             processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,"[Zeus] File already generated! ");

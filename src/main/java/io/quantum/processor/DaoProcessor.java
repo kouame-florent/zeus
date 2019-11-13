@@ -29,7 +29,8 @@ import io.quantum.annotation.WithDao;
  */
 
 @SupportedAnnotationTypes({
-    "io.quantum.annotation.WithDao"
+    "io.quantum.annotation.WithDao",
+    "io.quantum.annotation.Sealed"
 })
 @SupportedSourceVersion(SourceVersion.RELEASE_11)
 public class DaoProcessor extends AbstractProcessor{
