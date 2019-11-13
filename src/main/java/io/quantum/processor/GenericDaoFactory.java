@@ -86,8 +86,7 @@ public class GenericDaoFactory {
     public void generateCode(Filer filer,ProcessingEnvironment processingEnv){
         JavaFile javaFile = buildCode();
         try {
-            
-            javaFile.writeTo(filer);
+             javaFile.writeTo(filer);
             
         } catch (IOException ex) {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,"[Zeus] GenricDao already generated! ");

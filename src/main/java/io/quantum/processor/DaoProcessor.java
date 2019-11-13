@@ -6,6 +6,7 @@
 package io.quantum.processor;
 
 
+import io.quantum.annotation.Sealed;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
@@ -58,18 +59,27 @@ public class DaoProcessor extends AbstractProcessor{
     
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-               
-        for (Element annotatedElement : roundEnv.getElementsAnnotatedWith(WithDao.class)) {
-            if(annotatedElement.getKind() != ElementKind.CLASS){
-                error(annotatedElement, "Only classes can be annotated with @%s", WithDao.class.getSimpleName());
-                return true;
-            }else{
+             
+//        for (Element annotatedElement : roundEnv.getElementsAnnotatedWithAny(Set.of(WithDao.class, Sealed.class))) {
+//            if(annotatedElement.getKind() != ElementKind.CLASS){
+//                error(annotatedElement, "Only classes can be annotated with @%s", WithDao.class.getSimpleName());
+//                return true;
+//            }else{
+//                
+//                entityDaoFactory.add(annotatedElement);
+//                entityDaoImplFactory.add(annotatedElement);
+//                
+//            }
+//        }
+        
+        roundEnv.getElementsAnnotatedWithAny(Set.of(WithDao.class, Sealed.class))
+                .stream()
+                .filter(element -> element.getKind() == ElementKind.CLASS)
+                .forEach(e -> {  
+                    entityDaoFactory.add(e);
+                    entityDaoImplFactory.add(e);
+                });
                 
-                entityDaoFactory.add(annotatedElement);
-                entityDaoImplFactory.add(annotatedElement);
-                
-            }
-        }
     
         GenericDaoFactory daoFactory = new GenericDaoFactory();
         daoFactory.generateCode(filer, processingEnv);
