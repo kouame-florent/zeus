@@ -13,11 +13,14 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Writer;
 import java.util.List;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
 import javax.tools.Diagnostic;
+import javax.tools.JavaFileObject;
 
 /**
  *
@@ -84,9 +87,10 @@ public class GenericDaoFactory {
     }
     
     public void generateCode(Filer filer,ProcessingEnvironment processingEnv){
-        JavaFile javaFile = buildCode();
+        
         try {
-             javaFile.writeTo(filer);
+            JavaFile javaFile = buildCode();
+            javaFile.writeTo(filer);
             
         } catch (IOException ex) {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,"[Zeus] GenricDao already generated! ");

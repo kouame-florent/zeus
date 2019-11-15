@@ -6,7 +6,6 @@
 package io.quantum.processor;
 
 
-import io.quantum.annotation.Sealed;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
@@ -17,7 +16,6 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -31,7 +29,7 @@ import io.quantum.annotation.WithDao;
 
 @SupportedAnnotationTypes({
     "io.quantum.annotation.WithDao",
-    "io.quantum.annotation.Sealed"
+    "io.quantum.annotation.WithQuery"
 })
 @SupportedSourceVersion(SourceVersion.RELEASE_11)
 public class DaoProcessor extends AbstractProcessor{
@@ -51,31 +49,16 @@ public class DaoProcessor extends AbstractProcessor{
         elementUtils = processingEnv.getElementUtils();
         filer = processingEnv.getFiler();
         messager = processingEnv.getMessager();
-        
-        
+          
         entityDaoFactory = new EntityDaoFactory(filer, messager);
         entityDaoImplFactory = new EntityDaoImplFactory(filer, messager);
     }
     
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-             
-//        for (Element annotatedElement : roundEnv.getElementsAnnotatedWithAny(Set.of(WithDao.class, Sealed.class))) {
-//            if(annotatedElement.getKind() != ElementKind.CLASS){
-//                error(annotatedElement, "Only classes can be annotated with @%s", WithDao.class.getSimpleName());
-//                return true;
-//            }else{
-//                
-//                entityDaoFactory.add(annotatedElement);
-//                entityDaoImplFactory.add(annotatedElement);
-//                
-//            }
-//        }
-        
-        roundEnv.getElementsAnnotatedWithAny(Set.of(WithDao.class, Sealed.class))
+       
+        roundEnv.getElementsAnnotatedWithAny(Set.of(WithDao.class))
                 .stream()
-                .filter(element -> (element.getKind() == ElementKind.CLASS) 
-                        || (element.getKind() == ElementKind.INTERFACE))
                 .forEach(e -> {  
                     entityDaoFactory.add(e);
                     entityDaoImplFactory.add(e);
@@ -96,7 +79,7 @@ public class DaoProcessor extends AbstractProcessor{
         
         return true;
         
-    }  
+    }   
     
     private void error(Element e, String msg, Object... args) {
         messager.printMessage(Diagnostic.Kind.ERROR,String.format(msg, args),e);

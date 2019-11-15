@@ -11,7 +11,6 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
-import io.quantum.annotation.Sealed;
 import java.io.IOException;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
@@ -53,7 +52,7 @@ public class EntityDaoFactory extends DaoBaseFactory{
    
     @Override
     JavaFile buildCode(Element element) {
-        
+      
         entityDaoName = interfaceName(element.getSimpleName().toString());
         ClassName genricDao = ClassName.get(PackageName.GENERIC_DAO.pkgName(), "GenericDAO");
          
@@ -63,31 +62,27 @@ public class EntityDaoFactory extends DaoBaseFactory{
         TypeSpec entityDao = TypeSpec.interfaceBuilder(entityDaoName)
                 .addModifiers(Modifier.PUBLIC)
                 .addSuperinterface(ParameterizedTypeName.get(genricDao,entityTypeName,idTypeVarName))
-                .addAnnotation(Sealed.class)
                 .build();
-          
+        
+           
         return JavaFile.builder(PackageName.ENTITY_DAO.pkgName(), entityDao)
                 .skipJavaLangImports(true)
                 .indent("    ")
                 .build();
    }
     
+   private void buildMethods(){
+   
+   }
+   
+   private void buildClass(){
+   
+   }
   
-    private boolean hasSealed(){
-        return annotatedElements
-                .stream()
-                .map(elt -> elt.getAnnotation(Sealed.class))
-                .findAny().isPresent();
-
-//        return true;
-    }
-    
     
     @Override
     void writeFile(JavaFile javaFile,ProcessingEnvironment processingEnv){
-        
-//        if(hasSealed()) return;
-        
+       
         try {
             javaFile.writeTo(filer);
             

@@ -14,8 +14,8 @@ import java.lang.annotation.Target;
  *
  * @author root
  */
-@Target(ElementType.TYPE)
+@Target(ElementType.ANNOTATION_TYPE)
 @Retention(RetentionPolicy.SOURCE)
-public @interface Sealed {
+public @interface WithDefaultQuery {
     
 }
