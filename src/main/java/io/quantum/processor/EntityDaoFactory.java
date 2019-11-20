@@ -11,7 +11,11 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
+import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.util.Arrays;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -84,6 +88,14 @@ public class EntityDaoFactory extends DaoBaseFactory{
     void writeFile(JavaFile javaFile,ProcessingEnvironment processingEnv){
        
         try {
+//            javaFile.writeTo(Path.of("/home/florent/projects/task/src/main/java/task"));
+//            ClassLoader classLoader = getClass().getClassLoader();
+//            File file = new File(classLoader.getResource("io.quantum.task.domain.entity.Project").getFile());
+//            System.out.printf("[Zeus]--> LOADER: %s \n",classLoader);
+//            Arrays.stream(classLoader.getDefinedPackages())
+//                    .forEach(p -> System.out.printf("[Zeus]--> PACKAGE: %s \n",p));
+//            URL url = classLoader.getDefinedPackages()
+//            System.out.printf("[Zeus]--> URL: %s \n",url);
             javaFile.writeTo(filer);
             
         } catch (IOException ex) {

@@ -10,16 +10,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-
 /**
  *
  * @author root
  */
-@Target(ElementType.METHOD)
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)
-public @interface WithQuery {
-    
-    String namedQuery();
-    ReturnType returnType();
-    
+public @interface DAOImpl {
+    Class forClass();
 }

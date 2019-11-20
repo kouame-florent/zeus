@@ -72,7 +72,7 @@ public class EntityDaoImplFactory extends DaoBaseFactory{
                 .superclass(ParameterizedTypeName.get(genricDaoImpl,entityTypeName,TypeName.get(String.class)))
                 .addSuperinterface(entityDaoClassName)
                 .addModifiers(Modifier.PUBLIC)
-                .addAnnotation(statelessClassName)
+//                .addAnnotation(statelessClassName)
                 .addMethod(constructor)
                 .build();
         
