@@ -16,6 +16,7 @@ public enum PackageName {
     ENTITY_DAO("io.quantum.dao"),
     ENTITY_DAO_IMPL("io.quantum.dao.impl");
     
+    
     private final String pkgName;
     
     private PackageName(String name){

@@ -6,28 +6,31 @@
 package io.quantum.processor;
 
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.TypeVariableName;
 import io.quantum.annotation.DAOImpl;
 import io.quantum.annotation.QueryImpl;
+import io.quantum.annotation.util.DefaultStatement;
 import java.io.IOException;
-import java.util.AbstractMap;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
@@ -82,7 +85,7 @@ public class DaoImplFactory {
     }
     
     
-    private String annotationParamCanonicalName(Element annotatedElement){
+    private String daoImplParamCanonicalName(Element annotatedElement){
         try{
            DAOImpl daoImplAnnotation = annotatedElement.getAnnotation(DAOImpl.class);
            return daoImplAnnotation.forClass().getCanonicalName();
@@ -94,12 +97,12 @@ public class DaoImplFactory {
  
     }
     
-    
-    
-    
-    
+    private String queryImplParamCanonicalName(Element queryImplElement){
+        QueryImpl queryImplAnnotation = queryImplElement.getAnnotation(QueryImpl.class);
+        return queryImplAnnotation.queryName();
+    }
         
-    SimpleEntry<TypeSpec, Element> buildClassBody(Element element) {
+    TypeSpec buildClassBody(Element element) {
  
         String entityDaoImplName = targetClassName(element);
         String entityDaoName = sourceInterfaceName(element);
@@ -107,12 +110,20 @@ public class DaoImplFactory {
         ClassName genricDaoImpl = ClassName.get(PackageName.GENERIC_DAO_IMPL.pkgName(), "GenericDAOImpl");
         ClassName entityDaoClassName = ClassName.get((TypeElement)element);
         
-        String entityCanonicalName = annotationParamCanonicalName(element);
+        String entityCanonicalName = daoImplParamCanonicalName(element);
         
         TypeName entityTypeName = 
                 ClassName.get(elementsUtils.getTypeElement(entityCanonicalName));
-        
+          
         System.out.printf("[ZEUS] ENTITY TYPE NAME: %s \n",entityTypeName);
+        
+        List<Element> enclosedElements = (List<Element>) element.getEnclosedElements()
+                .stream().filter(e -> e.getKind() == ElementKind.METHOD)
+                .collect(Collectors.toList());
+        
+        List<MethodSpec> methods =  getAnnotatedMethods(enclosedElements).stream()
+                .map(e -> buildMethods(e,element)).collect(Collectors.toList());
+        
            
         MethodSpec constructor = MethodSpec.constructorBuilder()
                 .addModifiers(Modifier.PUBLIC)
@@ -123,59 +134,93 @@ public class DaoImplFactory {
                 .superclass(ParameterizedTypeName.get(genricDaoImpl,entityTypeName,TypeName.get(String.class)))
                 .addSuperinterface(entityDaoClassName)
                 .addModifiers(Modifier.PUBLIC)
-//                .addAnnotation(statelessClassName)
+                .addMethods(methods)
                 .addMethod(constructor)
                 .build();
-        
-        List<Element> enclosedElements = (List<Element>) element.getEnclosedElements()
-                .stream().filter(e -> e.getKind() == ElementKind.METHOD)
-                .collect(Collectors.toList());
-             
-        return new SimpleEntry<>(entityDao,element);
+            
+        return entityDao;
     }
     
-    private void handleMethodElement(List<Element> elements){
-        List<Element> notAnnotatedMethods =
-               elements.stream()
-                       .filter(e -> e.getAnnotationMirrors().isEmpty())
-                       .collect(Collectors.toList());
-       
-        List<Element>  annotatedMethods = 
-               elements.stream()
-                       .filter(e -> !e.getAnnotationMirrors().isEmpty())
-                       .collect(Collectors.toList()); 
+    private List<Element> getNotAnnotatedMethods(List<Element> elements){
+        return  elements.stream()
+                    .filter(e -> e.getAnnotationMirrors().isEmpty())
+                    .collect(Collectors.toList());
+    }
+    
+    private List<Element> getAnnotatedMethods(List<Element> elements){
+        return  elements.stream()
+                    .filter(e -> !e.getAnnotationMirrors().isEmpty())
+                    .collect(Collectors.toList()); 
+    }
+    
+    private MethodSpec buildMethods(Element executableElement,Element enclosingElement){
         
+        ExecutableElement execElt = (ExecutableElement)executableElement;
         
+        TypeMirror returnType = execElt.getReturnType();
+        TypeName returnTypeName = ClassName.get(returnType);
+        
+        List<? extends VariableElement> params = execElt.getParameters();
+        List<ParameterSpec> paramsSpecs = params.stream().map(ParameterSpec::get).collect(Collectors.toList());
+        
+        String entityCanonicalName = daoImplParamCanonicalName(enclosingElement);
+        
+        TypeName entityTypeName = 
+                ClassName.get(elementsUtils.getTypeElement(entityCanonicalName));
+        ClassName typedQueryClassName = ClassName.get("javax.persistence", "TypedQuery");
+
+        TypeName entityParameterizedTypeName = ParameterizedTypeName.get(typedQueryClassName, entityTypeName);
+        
+        String namedQuery = queryImplParamCanonicalName(executableElement);
+                
+        MethodSpec methodSpec = MethodSpec
+               .methodBuilder(execElt.getSimpleName().toString())
+               .addModifiers(Modifier.PUBLIC)
+               .addAnnotation(Override.class)
+               .addParameters(paramsSpecs)
+               .addStatement("$T query = em.createNamedQuery($S, $L)",
+                       entityParameterizedTypeName,namedQuery,entityTypeName.toString()+".class")
+               .addCode(addCodeBlock(executableElement))
+               .addStatement("return query.getResultList()")
                
+//               .addStatement(DefaultStatement.UNSUPPORTED_OPERATION_EXCEPTION.statement())
+               .returns(returnTypeName)
+               .build();
+       
+        return methodSpec;
+    
     }
     
     
-    private TypeSpec addMethods(SimpleEntry<TypeSpec, Element> entry){
-//        Element annotatedElement = entry.getValue();
-//        TypeSpec clazz = entry.getKey();
-//      
-//        MethodSpec method = MethodSpec.methodBuilder(annotatedElement.getSimpleName().toString())
-//                .addModifiers(Modifier.PUBLIC)
-//                .addAnnotation(Override.class)
-//                .build();
-//      
-//        clazz.methodSpecs.set(0, method);
+  private CodeBlock addCodeBlock(Element executableElement){
+      ExecutableElement execElt = (ExecutableElement)executableElement;
+     
+      List<CodeBlock> codeBlocks = execElt.getParameters().stream()
+                .map(ve -> createCodeLine(ve))
+                .collect(Collectors.toList());
       
-        return entry.getKey();
-   }
-  
-  private JavaFile buildClass(TypeSpec typeSpec){
-      return JavaFile.builder(PackageName.ENTITY_DAO_IMPL.pkgName(), typeSpec)
-                .skipJavaLangImports(true)
-                .indent("    ")
-                .build();
+      return CodeBlock.join(codeBlocks, ";");
   }
+  
+    
+    private CodeBlock createCodeLine(VariableElement variableElement){
+        return CodeBlock.builder()
+                    .addStatement("query.setParameter($S, $L)", 
+                            variableElement.getSimpleName().toString(),
+                            variableElement.getSimpleName().toString()).build();
+    }
+   
+    private JavaFile buildClass(TypeSpec typeSpec){
+        return JavaFile.builder(PackageName.ENTITY_DAO_IMPL.pkgName(), typeSpec)
+                  .skipJavaLangImports(true)
+                  .indent("    ")
+                  .build();
+    }
   
     
    void generateCode(ProcessingEnvironment processingEnv){
         annotatedElements.stream()
             .map(elt -> buildClassBody(elt))
-            .map(ent -> addMethods(ent))
             .map(this::buildClass)
             .forEach(jf -> writeFile(jf, processingEnv));
     }
