@@ -31,9 +31,8 @@ import javax.annotation.processing.Processor;
  */
 //@AutoService(Processor.class)
 @SupportedAnnotationTypes({
-    "io.quantum.annotation.WithDao",
-    "io.quantum.annotation.WithQuery",
-    "io.quantum.annotation.DAOImpl"
+    "io.quantum.annotation.DAOImpl",
+    "io.quantum.annotation.QueryImpl"
 })
 @SupportedSourceVersion(SourceVersion.RELEASE_11)
 public class DaoProcessor extends AbstractProcessor{
