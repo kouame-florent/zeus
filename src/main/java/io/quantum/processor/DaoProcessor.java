@@ -31,6 +31,7 @@ import javax.annotation.processing.Processor;
  */
 //@AutoService(Processor.class)
 @SupportedAnnotationTypes({
+    "io.quantum.annotation.DAO",
     "io.quantum.annotation.DAOImpl",
     "io.quantum.annotation.QueryImpl"
 })
@@ -42,7 +43,7 @@ public class DaoProcessor extends AbstractProcessor{
     private Filer filer;
     private Messager messager;
     
-    EntityDaoFactory entityDaoFactory;
+    DaoFactory entityDaoFactory;
     EntityDaoImplFactory entityDaoImplFactory;
     
     DaoImplFactory daoImplFactory;
@@ -55,7 +56,7 @@ public class DaoProcessor extends AbstractProcessor{
         filer = processingEnv.getFiler();
         messager = processingEnv.getMessager();
                           
-        entityDaoFactory = new EntityDaoFactory(filer, messager);
+        entityDaoFactory = new DaoFactory(filer, messager);
         entityDaoImplFactory = new EntityDaoImplFactory(filer, messager);
         
         daoImplFactory = new DaoImplFactory(processingEnv);
@@ -78,9 +79,10 @@ public class DaoProcessor extends AbstractProcessor{
         GenericDaoImplFActory genericDaoImplFActory = new GenericDaoImplFActory();
         genericDaoImplFActory.generateCode(filer, processingEnv);
         
-        daoImplFactory.generateCode(processingEnv);
+        entityDaoFactory.generateCode(processingEnv);
+//        daoImplFactory.generateCode(processingEnv);
         
-//        entityDaoFactory.generateCode(processingEnv);
+        
 //        entityDaoImplFactory.generateCode(processingEnv);
         
 //        entityDaoFactory.clearAnnotatedElements();

@@ -114,6 +114,8 @@ public class DaoImplFactory {
           
         System.out.printf("[ZEUS] ENTITY TYPE NAME: %s \n",entityTypeName);
         
+        
+        
         List<Element> enclosedElements = (List<Element>) element.getEnclosedElements()
                 .stream().filter(e -> e.getKind() == ElementKind.METHOD)
                 .collect(Collectors.toList());
@@ -126,11 +128,14 @@ public class DaoImplFactory {
                 .addModifiers(Modifier.PUBLIC)
                 .addStatement("super($L)",entityTypeName.toString()+".class")
                 .build();
+        
+        ClassName statelessAnnotationClassName = ClassName.get("javax.ejb", "Stateless");
                        
         TypeSpec entityDao = TypeSpec.classBuilder(entityDaoImplName)
                 .superclass(ParameterizedTypeName.get(genricDaoImpl,entityTypeName,TypeName.get(String.class)))
                 .addSuperinterface(entityDaoClassName)
                 .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(statelessAnnotationClassName)
                 .addMethods(methods)
                 .addMethod(constructor)
                 .build();

@@ -28,9 +28,9 @@ import javax.tools.Diagnostic;
  *
  * @author root
  */
-public class EntityDaoFactory extends DaoBaseFactory{
+public class DaoFactory extends DaoBaseFactory{
   
-    public EntityDaoFactory(Filer filer, Messager messager) {
+    public DaoFactory(Filer filer, Messager messager) {
         super(filer, messager);
     }
 
