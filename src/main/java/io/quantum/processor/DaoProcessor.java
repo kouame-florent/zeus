@@ -69,7 +69,7 @@ public class DaoProcessor extends AbstractProcessor{
         genericDaoImplFActory = new GenericDaoImplFActory();
         
         daoFactory = new DaoFactory(processingEnv);
-//        daoImplFactory = new DaoImplFactory(processingEnv);
+        daoImplFactory = new DaoImplFactory(processingEnv);
     }
     
     @Override
@@ -79,8 +79,7 @@ public class DaoProcessor extends AbstractProcessor{
                 .stream()
                 .forEach(e -> {  
                     daoFactory.add(e);
-//                    daoImplFactory.add(e);
-//                    daoImplFactory.add(e);
+                    daoImplFactory.add(e);
                 });
             
 //       GenericDaoFactory daoFactory = new GenericDaoFactory();
@@ -91,15 +90,10 @@ public class DaoProcessor extends AbstractProcessor{
         genericDaoImplFActory.generateCode(filer, processingEnv);
         
         daoFactory.generateCode(processingEnv);
+        daoImplFactory.generateCode(processingEnv);
         
-//        entityDaoFactory.generateCode(processingEnv);
-//        daoImplFactory.generateCode(processingEnv);
-        
-        
-//        entityDaoImplFactory.generateCode(processingEnv);
-        
-//        entityDaoFactory.clearAnnotatedElements();
-//        entityDaoImplFactory.clearAnnotatedElements();
+        daoFactory.clearAnnotatedElements();
+        daoImplFactory.clearAnnotatedElements();
         
         return true;
         

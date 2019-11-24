@@ -77,7 +77,7 @@ public class GenericDaoFactory {
                         findAll, getCount))
                 .build();
           
-        return JavaFile.builder(DefaultType.GENERIC_DAO.pkgName(), genericDao)
+        return JavaFile.builder(DefaultType.GENERIC_DAO.packageName(), genericDao)
                 .skipJavaLangImports(true)
                 .indent("    ")
                 .build();

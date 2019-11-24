@@ -50,7 +50,7 @@ public class DaoImplFactory {
 //    private static final String ENTITY_ANNOTATION_FQCN = "javax.persistence.Entity";
     
     public List<Element> annotatedElements = new ArrayList<>();
-    public List<Element> badAnnotatedElements = new ArrayList<>();
+    public List<Element> claimedElements = new ArrayList<>();
 
     public DaoImplFactory(ProcessingEnvironment processingEnv) {
         this.processingEnv = processingEnv;
@@ -60,67 +60,33 @@ public class DaoImplFactory {
         this.typesUtils = processingEnv.getTypeUtils();
     }
     
-     public void checkType(Element annotatedElement){
-        if(annotatedElement.getKind() != ElementKind.INTERFACE){
-            badAnnotatedElements.add(annotatedElement);
-        }
-    }
-       
-  
-    public void add(Element annotatedElement){
-        System.out.printf("[ZEUS] ANNOTATED ELT: %s \n",annotatedElement.toString());
-        System.out.printf("[ZEUS] ANNOTATED ELT KIND: %s \n",annotatedElement.getKind().toString());
-        if(annotatedElement.getKind() == ElementKind.INTERFACE){
-            annotatedElements.add(annotatedElement);
-        }
-    }
-    
-    private String targetClassName(Element interElement){
-        return interElement.getSimpleName() + "Impl";
-    }
-    
-    private String sourceInterfaceName(Element element){
-       return element.getSimpleName().toString();
-    }
+//     public void checkType(Element annotatedElement){
+//        if(annotatedElement.getKind() != ElementKind.INTERFACE){
+//            badAnnotatedElements.add(annotatedElement);
+//        }
+//    }
     
     
-    private String daoImplParamCanonicalName(Element annotatedElement){
-        try{
-           DAOImpl daoImplAnnotation = annotatedElement.getAnnotation(DAOImpl.class);
-           return daoImplAnnotation.forClass().getCanonicalName();
-           
-        }catch (MirroredTypeException e) {
-            System.out.printf("[ZEUS] MIRRORED TYPE EXCEPTION: %s \n",e.getTypeMirror());
-            return e.getTypeMirror().toString();
-        }
- 
+    void generateCode(ProcessingEnvironment processingEnv){
+        annotatedElements.stream()
+            .filter(elt -> isAccepted(elt, ElementKind.INTERFACE))
+            .map(elt -> buildClassBody(elt))
+            .map(this::buildClassFile)
+            .forEach(jf -> writeFile(jf, processingEnv));
     }
-    
-    private String queryImplParamCanonicalName(Element queryImplElement){
-        QueryImpl queryImplAnnotation = queryImplElement.getAnnotation(QueryImpl.class);
-        return queryImplAnnotation.queryName();
-    }
-    
-    private List<Element> getNotAnnotatedMethods(List<Element> elements){
-        return  elements.stream()
-                    .filter(e -> e.getAnnotationMirrors().isEmpty())
-                    .collect(Collectors.toList());
-    }
-    
-    private List<Element> getAnnotatedMethods(List<Element> elements){
-        return  elements.stream()
-                    .filter(e -> !e.getAnnotationMirrors().isEmpty())
-                    .collect(Collectors.toList()); 
-    }
-    
-        
+     
+   private boolean isAccepted(Element element,ElementKind elementKind){
+       return element.getKind() == elementKind;
+   }
+   
     TypeSpec buildClassBody(Element element) {
  
         String entityDaoImplName = targetClassName(element);
-        String entityDaoName = sourceInterfaceName(element);
+        String entityDaoName = targetSuperInterfaceName(element);
       
-        ClassName genricDaoImpl = ClassName.get(DefaultType.GENERIC_DAO_IMPL.pkgName(), "GenericDAOImpl");
-        ClassName entityDaoClassName = ClassName.get((TypeElement)element);
+        ClassName genricDaoImpl = ClassName.get(DefaultType.GENERIC_DAO_IMPL.packageName(), "GenericDAOImpl");
+        ClassName entityDaoClassName = ClassName.get(DefaultPackage.ENTITY_DAO.packageName(), 
+                entityDaoName);
         
         String entityCanonicalName = daoImplParamCanonicalName(element);
         
@@ -156,6 +122,87 @@ public class DaoImplFactory {
         return entityDao;
     }
     
+    private JavaFile buildClassFile(TypeSpec typeSpec){
+        return JavaFile.builder(DefaultPackage.ENTITY_DAO_IMPL.packageName(), typeSpec)
+                  .skipJavaLangImports(true)
+                  .indent("\t")
+                  .build();
+    }
+  
+    
+  
+    public void add(Element annotatedElement){
+        System.out.printf("[ZEUS] ANNOTATED ELT: %s \n",annotatedElement.toString());
+        System.out.printf("[ZEUS] ANNOTATED ELT KIND: %s \n",annotatedElement.getKind().toString());
+        if(annotatedElement.getKind() == ElementKind.INTERFACE){
+            annotatedElements.add(annotatedElement);
+        }
+    }
+    
+    public void clearAnnotatedElements(){
+        annotatedElements.clear();
+    }
+    
+    private String targetClassName(Element interfaceElement){
+        return annotationClassParamSimpleName(interfaceElement) + "DAO" + "Impl";
+    }
+    
+    private String targetSuperInterfaceName(Element interfaceElement){
+        return annotationClassParamSimpleName(interfaceElement) + "DAO";
+    }
+    
+//    private String sourceInterfaceName(Element element){
+//       return element.getSimpleName().toString();
+//    }
+    
+    private String annotationClassParamSimpleName(Element annotatedElement){
+        try{
+           System.out.printf("[ZEUS] annotated : %s \n",annotatedElement);
+           DAOImpl daoImplAnnotation = annotatedElement.getAnnotation(DAOImpl.class);
+//           System.out.printf("[ZEUS] DAO ANNNO : %s \n",daoAnnotation);
+           String name = daoImplAnnotation.forClass().getSimpleName();
+           System.out.printf("[ZEUS] DAO CLASS SIMPLE NAME : %s \n",name);
+           return name;
+           
+        }catch (MirroredTypeException e) {
+            System.out.printf("[ZEUS] MIRRORED TYPE EXCEPTION: %s \n",e.getTypeMirror());
+            String name = typesUtils.asElement(e.getTypeMirror()).getSimpleName().toString();
+            System.out.printf("[ZEUS] DAO CLASS SIMPLE NAME : %s \n",name);
+            return name;
+        }
+ 
+    }
+    
+    
+    private String daoImplParamCanonicalName(Element annotatedElement){
+        try{
+           DAOImpl daoImplAnnotation = annotatedElement.getAnnotation(DAOImpl.class);
+           return daoImplAnnotation.forClass().getCanonicalName();
+           
+        }catch (MirroredTypeException e) {
+            System.out.printf("[ZEUS] MIRRORED TYPE EXCEPTION: %s \n",e.getTypeMirror());
+            return e.getTypeMirror().toString();
+        }
+ 
+    }
+    
+    private String queryImplParamCanonicalName(Element queryImplElement){
+        QueryImpl queryImplAnnotation = queryImplElement.getAnnotation(QueryImpl.class);
+        return queryImplAnnotation.queryName();
+    }
+    
+    private List<Element> getNotAnnotatedMethods(List<Element> elements){
+        return  elements.stream()
+                    .filter(e -> e.getAnnotationMirrors().isEmpty())
+                    .collect(Collectors.toList());
+    }
+    
+    private List<Element> getAnnotatedMethods(List<Element> elements){
+        return  elements.stream()
+                    .filter(e -> !e.getAnnotationMirrors().isEmpty())
+                    .collect(Collectors.toList()); 
+    }
+   
   
     private MethodSpec buildMethods(Element executableElement,Element enclosingElement){
         
@@ -195,6 +242,11 @@ public class DaoImplFactory {
     
     }
     
+    private String returnStatement(TypeMirror returnType){
+      
+       return "";
+    }
+    
     
   private CodeBlock addCodeBlock(Element executableElement){
       ExecutableElement execElt = (ExecutableElement)executableElement;
@@ -214,20 +266,9 @@ public class DaoImplFactory {
                             variableElement.getSimpleName().toString()).build();
     }
    
-    private JavaFile buildClass(TypeSpec typeSpec){
-        return JavaFile.builder(DefaultPackage.ENTITY_DAO_IMPL.packageName(), typeSpec)
-                  .skipJavaLangImports(true)
-                  .indent("    ")
-                  .build();
-    }
-  
     
-   void generateCode(ProcessingEnvironment processingEnv){
-        annotatedElements.stream()
-            .map(elt -> buildClassBody(elt))
-            .map(this::buildClass)
-            .forEach(jf -> writeFile(jf, processingEnv));
-    }
+    
+  
    
    private void writeFile(JavaFile javaFile,ProcessingEnvironment processingEnv){
         try {
