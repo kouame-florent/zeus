@@ -3,27 +3,25 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package io.quantum.processor;
+package io.quantum.annotation.util;
 
 /**
  *
  * @author root
  */
-public enum PackageName {
-    
-    GENERIC_DAO("io.quantum.dao"),
-    GENERIC_DAO_IMPL("io.quantum.dao"),
+public enum DefaultPackage {
     ENTITY_DAO("io.quantum.dao"),
     ENTITY_DAO_IMPL("io.quantum.dao.impl");
+      
+    private final String packageName;
+  
     
-    
-    private final String pkgName;
-    
-    private PackageName(String name){
-        this.pkgName = name;
+    private DefaultPackage(String packageName){
+        this.packageName = packageName;
+        
     }
 
-    public String pkgName() {
-        return pkgName;
+    public String packageName(){
+        return packageName;
     }
 }

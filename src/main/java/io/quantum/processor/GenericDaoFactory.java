@@ -5,6 +5,7 @@
  */
 package io.quantum.processor;
 
+import io.quantum.annotation.util.DefaultType;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
@@ -13,14 +14,11 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.Writer;
 import java.util.List;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
 import javax.tools.Diagnostic;
-import javax.tools.JavaFileObject;
 
 /**
  *
@@ -79,7 +77,7 @@ public class GenericDaoFactory {
                         findAll, getCount))
                 .build();
           
-        return JavaFile.builder(PackageName.GENERIC_DAO.pkgName(), genericDao)
+        return JavaFile.builder(DefaultType.GENERIC_DAO.pkgName(), genericDao)
                 .skipJavaLangImports(true)
                 .indent("    ")
                 .build();

@@ -5,6 +5,7 @@
  */
 package io.quantum.processor;
 
+import io.quantum.annotation.util.DefaultType;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
@@ -26,7 +27,7 @@ import javax.tools.Diagnostic;
  */
 public class GenericDaoImplFActory {
     
-    ClassName genricDao = ClassName.get(PackageName.GENERIC_DAO.pkgName(), "GenericDAO");
+    ClassName genricDao = ClassName.get(DefaultType.GENERIC_DAO.pkgName(), "GenericDAO");
    
     TypeVariableName entityTypeVarName = TypeVariableName.get("E");
     TypeVariableName idTypeVarName = TypeVariableName.get("ID");
@@ -119,7 +120,7 @@ public class GenericDaoImplFActory {
                 .build();
       
         
-        return JavaFile.builder(PackageName.GENERIC_DAO_IMPL.pkgName(), genericDaoImpl)
+        return JavaFile.builder(DefaultType.GENERIC_DAO_IMPL.pkgName(), genericDaoImpl)
                 .skipJavaLangImports(true)
                 .indent("    ")
                 .build();

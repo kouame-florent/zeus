@@ -5,6 +5,7 @@
  */
 package io.quantum.processor;
 
+import io.quantum.annotation.util.DefaultType;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.JavaFile;
@@ -15,6 +16,7 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import io.quantum.annotation.DAOImpl;
 import io.quantum.annotation.QueryImpl;
+import io.quantum.annotation.util.DefaultPackage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -98,13 +100,26 @@ public class DaoImplFactory {
         QueryImpl queryImplAnnotation = queryImplElement.getAnnotation(QueryImpl.class);
         return queryImplAnnotation.queryName();
     }
+    
+    private List<Element> getNotAnnotatedMethods(List<Element> elements){
+        return  elements.stream()
+                    .filter(e -> e.getAnnotationMirrors().isEmpty())
+                    .collect(Collectors.toList());
+    }
+    
+    private List<Element> getAnnotatedMethods(List<Element> elements){
+        return  elements.stream()
+                    .filter(e -> !e.getAnnotationMirrors().isEmpty())
+                    .collect(Collectors.toList()); 
+    }
+    
         
     TypeSpec buildClassBody(Element element) {
  
         String entityDaoImplName = targetClassName(element);
         String entityDaoName = sourceInterfaceName(element);
       
-        ClassName genricDaoImpl = ClassName.get(PackageName.GENERIC_DAO_IMPL.pkgName(), "GenericDAOImpl");
+        ClassName genricDaoImpl = ClassName.get(DefaultType.GENERIC_DAO_IMPL.pkgName(), "GenericDAOImpl");
         ClassName entityDaoClassName = ClassName.get((TypeElement)element);
         
         String entityCanonicalName = daoImplParamCanonicalName(element);
@@ -113,9 +128,7 @@ public class DaoImplFactory {
                 ClassName.get(elementsUtils.getTypeElement(entityCanonicalName));
           
         System.out.printf("[ZEUS] ENTITY TYPE NAME: %s \n",entityTypeName);
-        
-        
-        
+           
         List<Element> enclosedElements = (List<Element>) element.getEnclosedElements()
                 .stream().filter(e -> e.getKind() == ElementKind.METHOD)
                 .collect(Collectors.toList());
@@ -143,18 +156,7 @@ public class DaoImplFactory {
         return entityDao;
     }
     
-    private List<Element> getNotAnnotatedMethods(List<Element> elements){
-        return  elements.stream()
-                    .filter(e -> e.getAnnotationMirrors().isEmpty())
-                    .collect(Collectors.toList());
-    }
-    
-    private List<Element> getAnnotatedMethods(List<Element> elements){
-        return  elements.stream()
-                    .filter(e -> !e.getAnnotationMirrors().isEmpty())
-                    .collect(Collectors.toList()); 
-    }
-    
+  
     private MethodSpec buildMethods(Element executableElement,Element enclosingElement){
         
         ExecutableElement execElt = (ExecutableElement)executableElement;
@@ -213,7 +215,7 @@ public class DaoImplFactory {
     }
    
     private JavaFile buildClass(TypeSpec typeSpec){
-        return JavaFile.builder(PackageName.ENTITY_DAO_IMPL.pkgName(), typeSpec)
+        return JavaFile.builder(DefaultPackage.ENTITY_DAO_IMPL.packageName(), typeSpec)
                   .skipJavaLangImports(true)
                   .indent("    ")
                   .build();

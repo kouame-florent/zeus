@@ -7,6 +7,7 @@ package io.quantum.processor;
 
 
 
+import io.quantum.annotation.DAO;
 import io.quantum.annotation.DAOImpl;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
@@ -43,9 +44,13 @@ public class DaoProcessor extends AbstractProcessor{
     private Filer filer;
     private Messager messager;
     
-    DaoFactory entityDaoFactory;
-    EntityDaoImplFactory entityDaoImplFactory;
     
+//    EntityDaoImplFactory entityDaoImplFactory;
+    
+    GenericDaoFactory genericDaoFactory;
+    GenericDaoImplFActory genericDaoImplFActory;
+    
+    DaoFactory daoFactory;
     DaoImplFactory daoImplFactory;
             
     @Override
@@ -56,30 +61,38 @@ public class DaoProcessor extends AbstractProcessor{
         filer = processingEnv.getFiler();
         messager = processingEnv.getMessager();
                           
-        entityDaoFactory = new DaoFactory(filer, messager);
-        entityDaoImplFactory = new EntityDaoImplFactory(filer, messager);
+//        entityDaoFactory = new DaoFactory(filer, messager);
+//        entityDaoImplFactory = new EntityDaoImplFactory(filer, messager);
+
+
+        genericDaoFactory = new GenericDaoFactory();
+        genericDaoImplFActory = new GenericDaoImplFActory();
         
-        daoImplFactory = new DaoImplFactory(processingEnv);
+        daoFactory = new DaoFactory(processingEnv);
+//        daoImplFactory = new DaoImplFactory(processingEnv);
     }
     
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         
-        roundEnv.getElementsAnnotatedWithAny(Set.of(WithDao.class,DAOImpl.class))
+        roundEnv.getElementsAnnotatedWithAny(Set.of(WithDao.class,DAOImpl.class,DAO.class))
                 .stream()
                 .forEach(e -> {  
-//                    entityDaoFactory.add(e);
-//                    entityDaoImplFactory.add(e);
-                    daoImplFactory.add(e);
+                    daoFactory.add(e);
+//                    daoImplFactory.add(e);
+//                    daoImplFactory.add(e);
                 });
             
-        GenericDaoFactory daoFactory = new GenericDaoFactory();
-        daoFactory.generateCode(filer, processingEnv);
+//       GenericDaoFactory daoFactory = new GenericDaoFactory();
+//       daoFactory.generateCode(filer, processingEnv);
         
-        GenericDaoImplFActory genericDaoImplFActory = new GenericDaoImplFActory();
+//      GenericDaoImplFActory genericDaoImplFActory = new GenericDaoImplFActory();
+        genericDaoFactory.generateCode(filer, processingEnv);
         genericDaoImplFActory.generateCode(filer, processingEnv);
         
-        entityDaoFactory.generateCode(processingEnv);
+        daoFactory.generateCode(processingEnv);
+        
+//        entityDaoFactory.generateCode(processingEnv);
 //        daoImplFactory.generateCode(processingEnv);
         
         

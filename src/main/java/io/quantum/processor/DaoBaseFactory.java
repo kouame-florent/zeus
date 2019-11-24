@@ -23,42 +23,42 @@ import javax.tools.Diagnostic;
  */
 public abstract class DaoBaseFactory {
     
-    protected final Filer filer;
-    private final Messager messager;
-    private static final String ENTITY_ANNOTATION_FQCN = "javax.persistence.Entity";
-    
-    public List<Element> annotatedElements = new ArrayList<>();
-    public List<Element> badAnnotatedElements = new ArrayList<>();
-
-    public DaoBaseFactory(Filer filer, Messager messager) {
-        this.filer = filer;
-        this.messager = messager;
-    }
-        
-    
-    boolean isEntity(Element element){
-        return element.getAnnotationMirrors()
-                .stream().map(AnnotationMirror::getAnnotationType)
-                .map(DeclaredType::toString)
-                .anyMatch(n -> n.equalsIgnoreCase(ENTITY_ANNOTATION_FQCN));
-    }
-    
-    abstract JavaFile buildCode(Element element);
-   
-    void generateCode(ProcessingEnvironment processingEnv){
-        annotatedElements.stream()
-            .filter(this::isEntity)
-            .map(e -> buildCode(e))
-            .forEach(jf -> writeFile(jf, processingEnv));
-    }
-    
-    void writeFile(JavaFile javaFile,ProcessingEnvironment processingEnv){
-        try {
-           
-            javaFile.writeTo(filer);
-        } catch (IOException ex) {
-            System.out.printf("[Zeus] File already generated! %s",ex);
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,"[Zeus] File already generated! ");
-        }
-    }
+//    protected final Filer filer;
+//    private final Messager messager;
+//    private static final String ENTITY_ANNOTATION_FQCN = "javax.persistence.Entity";
+//    
+//    public List<Element> annotatedElements = new ArrayList<>();
+//    public List<Element> badAnnotatedElements = new ArrayList<>();
+////
+//    public DaoBaseFactory(Filer filer, Messager messager) {
+//        this.filer = filer;
+//        this.messager = messager;
+//    }
+//        
+//    
+//    boolean isEntity(Element element){
+//        return element.getAnnotationMirrors()
+//                .stream().map(AnnotationMirror::getAnnotationType)
+//                .map(DeclaredType::toString)
+//                .anyMatch(n -> n.equalsIgnoreCase(ENTITY_ANNOTATION_FQCN));
+//    }
+//    
+//    abstract JavaFile buildCode(Element element);
+//   
+//    void generateCode(ProcessingEnvironment processingEnv){
+//        annotatedElements.stream()
+//            .filter(this::isEntity)
+//            .map(e -> buildCode(e))
+//            .forEach(jf -> writeFile(jf, processingEnv));
+//    }
+//    
+//    void writeFile(JavaFile javaFile,ProcessingEnvironment processingEnv){
+//        try {
+//           
+//            javaFile.writeTo(filer);
+//        } catch (IOException ex) {
+//            System.out.printf("[Zeus] File already generated! %s",ex);
+//            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,"[Zeus] File already generated! ");
+//        }
+//    }
 }
