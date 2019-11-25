@@ -151,17 +151,11 @@ public class DaoImplFactory {
         return annotationClassParamSimpleName(interfaceElement) + "DAO";
     }
     
-//    private String sourceInterfaceName(Element element){
-//       return element.getSimpleName().toString();
-//    }
-    
+
     private String annotationClassParamSimpleName(Element annotatedElement){
         try{
-           System.out.printf("[ZEUS] annotated : %s \n",annotatedElement);
            DAOImpl daoImplAnnotation = annotatedElement.getAnnotation(DAOImpl.class);
-//           System.out.printf("[ZEUS] DAO ANNNO : %s \n",daoAnnotation);
            String name = daoImplAnnotation.forClass().getSimpleName();
-           System.out.printf("[ZEUS] DAO CLASS SIMPLE NAME : %s \n",name);
            return name;
            
         }catch (MirroredTypeException e) {
@@ -173,7 +167,23 @@ public class DaoImplFactory {
  
     }
     
-    
+    private QueryImpl.Type annotationReturnTypeParam(Element annotatedElement){
+        try{
+           QueryImpl queryImplAnn = annotatedElement.getAnnotation(QueryImpl.class);
+           QueryImpl.Type type = queryImplAnn.returnType();
+           return type;
+           
+        }catch (MirroredTypeException e) {
+            System.out.printf("[ZEUS] MIRRORED TYPE EXCEPTION: %s \n",e.getTypeMirror());
+            QueryImpl queryImplAnn = typesUtils
+                    .asElement(e.getTypeMirror()).getAnnotation(QueryImpl.class);
+            QueryImpl.Type type = queryImplAnn.returnType();
+            System.out.printf("[ZEUS] DAO CLASS SIMPLE NAME : %s \n",type);
+            return type;
+        }
+ 
+    }
+        
     private String daoImplParamCanonicalName(Element annotatedElement){
         try{
            DAOImpl daoImplAnnotation = annotatedElement.getAnnotation(DAOImpl.class);
@@ -185,6 +195,7 @@ public class DaoImplFactory {
         }
  
     }
+    
     
     private String queryImplParamCanonicalName(Element queryImplElement){
         QueryImpl queryImplAnnotation = queryImplElement.getAnnotation(QueryImpl.class);
@@ -232,7 +243,7 @@ public class DaoImplFactory {
                .addStatement("$T query = em.createNamedQuery($S, $L)",
                        entityParameterizedTypeName,namedQuery,entityTypeName.toString()+".class")
                .addCode(addCodeBlock(executableElement))
-               .addStatement("return query.getResultList()")
+               .addCode(returnStatement(execElt,enclosingElement))
                
 //               .addStatement(DefaultStatement.UNSUPPORTED_OPERATION_EXCEPTION.statement())
                .returns(returnTypeName)
@@ -242,21 +253,39 @@ public class DaoImplFactory {
     
     }
     
-    private String returnStatement(TypeMirror returnType){
-      
-       return "";
+    private CodeBlock returnStatement(ExecutableElement execElt,Element enclosingElement){
+       QueryImpl.Type type = annotationReturnTypeParam(execElt);
+        System.out.printf("[ZEUS] RETURN TYPE: %s\n",type);
+       switch(type){
+           case LIST:
+               return CodeBlock.builder().addStatement("return query.getResultList()").build();
+           case OPTIONAL:
+               return returnTypeCode(enclosingElement);
+       }
+       return CodeBlock.builder().addStatement("return query.getResultList()")
+               .build();
     }
     
+    private CodeBlock returnTypeCode(Element elt){
+        String type = annotationClassParamSimpleName(elt);
+        return CodeBlock.builder()
+                .addStatement("List<$L> results =  query.getResultList()",type)
+                .beginControlFlow("if(!results.isEmpty())")
+                .addStatement("return Optional.of(results.get(0))")
+                .endControlFlow()
+                .addStatement("return Optional.empty()")
+                .build();
+    }
     
-  private CodeBlock addCodeBlock(Element executableElement){
-      ExecutableElement execElt = (ExecutableElement)executableElement;
-     
-      List<CodeBlock> codeBlocks = execElt.getParameters().stream()
-                .map(ve -> createCodeLine(ve))
-                .collect(Collectors.toList());
-      
-      return CodeBlock.join(codeBlocks, ";");
-  }
+    private CodeBlock addCodeBlock(Element executableElement){
+        ExecutableElement execElt = (ExecutableElement)executableElement;
+
+        List<CodeBlock> codeBlocks = execElt.getParameters().stream()
+                  .map(ve -> createCodeLine(ve))
+                  .collect(Collectors.toList());
+
+        return CodeBlock.join(codeBlocks, "");
+    }
   
     
     private CodeBlock createCodeLine(VariableElement variableElement){
@@ -265,9 +294,6 @@ public class DaoImplFactory {
                             variableElement.getSimpleName().toString(),
                             variableElement.getSimpleName().toString()).build();
     }
-   
-    
-    
   
    
    private void writeFile(JavaFile javaFile,ProcessingEnvironment processingEnv){

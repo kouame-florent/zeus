@@ -18,4 +18,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 public @interface QueryImpl {
     String queryName() default "";
+    Type returnType() default Type.LIST;
+    
+    enum Type{LIST,OPTIONAL;};
 }
