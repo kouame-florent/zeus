@@ -44,7 +44,8 @@ public class DaoFactory{
     private final Messager messager;
     private final Types typesUtils;
     private final Elements elementsUtils;
-    private static final String ENTITY_ANNOTATION_FQCN = "javax.persistence.Entity";
+    private final Class<DAO> acceptedClass = DAO.class;
+ 
     
     public List<Element> annotatedElements = new ArrayList<>();
     public List<Element> badAnnotatedElements = new ArrayList<>();
@@ -59,11 +60,19 @@ public class DaoFactory{
     
     public void generateCode(ProcessingEnvironment processingEnv){
        annotatedElements.stream()
-            .filter(elt -> isAccepted(elt, ElementKind.INTERFACE))
+            .peek(elt -> System.out.printf("[ZEUS] BEFORE FILTER: %s\n",elt))
+            .filter(elt -> isAccepted(elt))
+            .peek(elt -> System.out.printf("[ZEUS] AFTER FILTER: %s\n",elt))
             .map(elt -> buildInterfaceBody(elt))
             .map(this::buildInterfaceFile)
             .forEach(jf -> writeFile(jf, processingEnv));
     }
+    
+    private boolean isAccepted(Element element){
+       return ((element.getKind() == ElementKind.INTERFACE) && 
+               (element.getAnnotation(acceptedClass) != null));
+    }
+     
     
     TypeSpec buildInterfaceBody(Element element) {
       
@@ -92,6 +101,27 @@ public class DaoFactory{
         
     }
     
+    private String targetClassName(Element interfaceElement){
+        return annotationClassParamSimpleName(interfaceElement) + "DAO";
+    }
+    
+    private String annotationClassParamSimpleName(Element annotatedElement){
+        try{
+           System.out.printf("[ZEUS] annotated : %s \n",annotatedElement);
+           DAO daoAnnotation = annotatedElement.getAnnotation(DAO.class);
+           String name = daoAnnotation.forClass().getSimpleName();
+           System.out.printf("[ZEUS] DAO CLASS SIMPLE NAME : %s \n",name);
+           return name;
+           
+        }catch (MirroredTypeException e) {
+            System.out.printf("[ZEUS] MIRRORED TYPE EXCEPTION: %s \n",e.getTypeMirror());
+            String name = typesUtils.asElement(e.getTypeMirror()).getSimpleName().toString();
+            System.out.printf("[ZEUS] DAO CLASS SIMPLE NAME : %s \n",name);
+            return name;
+        }
+ 
+    }
+    
     private JavaFile buildInterfaceFile(TypeSpec typeSpec){
         return JavaFile.builder(DefaultPackage.ENTITY_DAO.packageName(), typeSpec)
                   .skipJavaLangImports(true)
@@ -107,33 +137,7 @@ public class DaoFactory{
             processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,"[Zeus] File already generated! ");
         }
     }
-    
-    private String targetClassName(Element interfaceElement){
-        return annotationClassParamSimpleName(interfaceElement) + "DAO";
-    }
-  
-    private String annotationClassParamSimpleName(Element annotatedElement){
-        try{
-           System.out.printf("[ZEUS] annotated : %s \n",annotatedElement);
-           DAO daoAnnotation = annotatedElement.getAnnotation(DAO.class);
-//           System.out.printf("[ZEUS] DAO ANNNO : %s \n",daoAnnotation);
-           String name = daoAnnotation.forClass().getSimpleName();
-           System.out.printf("[ZEUS] DAO CLASS SIMPLE NAME : %s \n",name);
-           return name;
-           
-        }catch (MirroredTypeException e) {
-            System.out.printf("[ZEUS] MIRRORED TYPE EXCEPTION: %s \n",e.getTypeMirror());
-            String name = typesUtils.asElement(e.getTypeMirror()).getSimpleName().toString();
-            System.out.printf("[ZEUS] DAO CLASS SIMPLE NAME : %s \n",name);
-            return name;
-        }
- 
-    }
-    
-    private boolean isAccepted(Element element,ElementKind elementKind){
-       return element.getKind() == elementKind;
-    }
-     
+   
 
     public void add(Element element){
         annotatedElements.add(element);
@@ -143,16 +147,6 @@ public class DaoFactory{
         annotatedElements.clear();
     }
     
-//    public void checkType(Element annotatedElement){
-//        if(annotatedElement.getKind() != ElementKind.CLASS){
-//            badAnnotatedElements.add(annotatedElement);
-//        }
-//    }
-    
-//   private String interfaceName(String elementSimpleName){
-//       return elementSimpleName + "DAO";
-//   }
-   
     private List<Element> getAnnotatedMethods(List<Element> elements){
         return  elements.stream()
                     .filter(e -> !e.getAnnotationMirrors().isEmpty())

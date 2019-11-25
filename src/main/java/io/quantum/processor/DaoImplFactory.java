@@ -47,7 +47,7 @@ public class DaoImplFactory {
     private final Messager messager;
     private final Types typesUtils;
     private final Elements elementsUtils;
-//    private static final String ENTITY_ANNOTATION_FQCN = "javax.persistence.Entity";
+    private final Class<DAOImpl> acceptedClass = DAOImpl.class;
     
     public List<Element> annotatedElements = new ArrayList<>();
     public List<Element> claimedElements = new ArrayList<>();
@@ -59,25 +59,20 @@ public class DaoImplFactory {
         this.elementsUtils = processingEnv.getElementUtils();
         this.typesUtils = processingEnv.getTypeUtils();
     }
-    
-//     public void checkType(Element annotatedElement){
-//        if(annotatedElement.getKind() != ElementKind.INTERFACE){
-//            badAnnotatedElements.add(annotatedElement);
-//        }
-//    }
-    
+ 
     
     void generateCode(ProcessingEnvironment processingEnv){
         annotatedElements.stream()
-            .filter(elt -> isAccepted(elt, ElementKind.INTERFACE))
+            .filter(elt -> isAccepted(elt))
             .map(elt -> buildClassBody(elt))
             .map(this::buildClassFile)
             .forEach(jf -> writeFile(jf, processingEnv));
     }
      
-   private boolean isAccepted(Element element,ElementKind elementKind){
-       return element.getKind() == elementKind;
-   }
+   private boolean isAccepted(Element element){
+       return ((element.getKind() == ElementKind.INTERFACE) && 
+               (element.getAnnotation(acceptedClass) != null));
+    }
    
     TypeSpec buildClassBody(Element element) {
  
@@ -268,8 +263,9 @@ public class DaoImplFactory {
     
     private CodeBlock returnTypeCode(Element elt){
         String type = annotationClassParamSimpleName(elt);
+        ClassName listClassName = ClassName.get(List.class);
         return CodeBlock.builder()
-                .addStatement("List<$L> results =  query.getResultList()",type)
+                .addStatement("$T<$L> results =  query.getResultList()",listClassName,type)
                 .beginControlFlow("if(!results.isEmpty())")
                 .addStatement("return Optional.of(results.get(0))")
                 .endControlFlow()
