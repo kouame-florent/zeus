@@ -14,11 +14,9 @@ import java.lang.annotation.Target;
  *
  * @author root
  */
-@Target(ElementType.METHOD)
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)
-public @interface QueryImpl {
-    String queryName() ;
-    Type returnType() ;
-    
-    enum Type{LIST,OPTIONAL;};
+public @interface Repo {
+    DAO dao();
+    DAOImpl daoImpl();
 }
