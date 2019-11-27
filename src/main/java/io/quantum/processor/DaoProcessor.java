@@ -24,8 +24,6 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
-import io.quantum.annotation.WithDao;
-import javax.annotation.processing.Processor;
 
 /**
  *
@@ -45,9 +43,6 @@ public class DaoProcessor extends AbstractProcessor{
     private Filer filer;
     private Messager messager;
     
-    
-//    EntityDaoImplFactory entityDaoImplFactory;
-    
     GenericDaoFactory genericDaoFactory;
     GenericDaoImplFActory genericDaoImplFActory;
     
@@ -61,11 +56,7 @@ public class DaoProcessor extends AbstractProcessor{
         elementUtils = processingEnv.getElementUtils();
         filer = processingEnv.getFiler();
         messager = processingEnv.getMessager();
-                          
-//        entityDaoFactory = new DaoFactory(filer, messager);
-//        entityDaoImplFactory = new EntityDaoImplFactory(filer, messager);
-
-
+          
         genericDaoFactory = new GenericDaoFactory();
         genericDaoImplFActory = new GenericDaoImplFActory();
         
@@ -83,10 +74,6 @@ public class DaoProcessor extends AbstractProcessor{
                     daoImplFactory.add(e);
                 });
             
-//       GenericDaoFactory daoFactory = new GenericDaoFactory();
-//       daoFactory.generateCode(filer, processingEnv);
-        
-//      GenericDaoImplFActory genericDaoImplFActory = new GenericDaoImplFActory();
         genericDaoFactory.generateCode(filer, processingEnv);
         genericDaoImplFActory.generateCode(filer, processingEnv);
         

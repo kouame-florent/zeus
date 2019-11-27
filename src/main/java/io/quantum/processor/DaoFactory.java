@@ -45,8 +45,7 @@ public class DaoFactory{
     private final Types typesUtils;
     private final Elements elementsUtils;
     private final Class<DAO> acceptedClass = DAO.class;
- 
-    
+     
     public List<Element> annotatedElements = new ArrayList<>();
     public List<Element> badAnnotatedElements = new ArrayList<>();
   
@@ -72,13 +71,12 @@ public class DaoFactory{
        return ((element.getKind() == ElementKind.INTERFACE) && 
                (element.getAnnotation(acceptedClass) != null));
     }
-     
-    
+        
     TypeSpec buildInterfaceBody(Element element) {
       
         String daoInterfaceName = targetClassName(element);
         ClassName genricDao = ClassName.get(DefaultType.GENERIC_DAO.packageName(),
-                DefaultType.GENERIC_DAO.entityName());
+                DefaultType.GENERIC_DAO.className());
         
         TypeName entityTypeName = 
                 ClassName.get(elementsUtils.getTypeElement(daoClassParamCanonicalName(element)));
@@ -88,9 +86,8 @@ public class DaoFactory{
                 .collect(Collectors.toList());
         
         List<MethodSpec> methods =  getAnnotatedMethods(enclosedElements).stream()
-                .map(e -> buildAbstractMethods(e,element)).collect(Collectors.toList());
-        
-      
+                .map(e -> buildAbstractMethods(e)).collect(Collectors.toList());
+             
         TypeSpec daoInterface = TypeSpec.interfaceBuilder(daoInterfaceName)
                 .addSuperinterface(ParameterizedTypeName.get(genricDao,entityTypeName,TypeName.get(String.class)))
                 .addModifiers(Modifier.PUBLIC)
@@ -101,6 +98,40 @@ public class DaoFactory{
         
     }
     
+    private MethodSpec buildAbstractMethods(Element executableElement){
+         
+        ExecutableElement execElt = (ExecutableElement)executableElement;
+//        System.out.printf("[ZEUS] RETURN TYPE NAME: %s \n",execElt.getReturnType());
+   
+        List<? extends VariableElement> params = execElt.getParameters();
+        List<ParameterSpec> paramsSpecs = params.stream().map(ParameterSpec::get).collect(Collectors.toList());
+        
+        TypeMirror returnType = execElt.getReturnType();
+        TypeName returnTypeName = ClassName.get(returnType);
+        
+        MethodSpec methodSpec = MethodSpec
+               .methodBuilder(execElt.getSimpleName().toString())
+               .addModifiers(Modifier.PUBLIC,Modifier.ABSTRACT)
+               .addParameters(paramsSpecs)
+               .returns(returnTypeName)
+               .build();
+       
+        return methodSpec;
+        
+    }
+    
+     private String daoClassParamCanonicalName(Element annotatedElement){
+        try{
+           DAO daoAnnotation = annotatedElement.getAnnotation(DAO.class);
+           return daoAnnotation.forClass().getCanonicalName();
+           
+        }catch (MirroredTypeException e) {
+            System.out.printf("[ZEUS] MIRRORED TYPE EXCEPTION: %s \n",e.getTypeMirror());
+            return e.getTypeMirror().toString();
+        }
+ 
+    }
+        
     private String targetClassName(Element interfaceElement){
         return annotationClassParamSimpleName(interfaceElement) + "DAO";
     }
@@ -122,13 +153,21 @@ public class DaoFactory{
  
     }
     
+    private List<Element> getAnnotatedMethods(List<Element> elements){
+        return  elements.stream()
+                    .filter(e -> !e.getAnnotationMirrors().isEmpty())
+                    .collect(Collectors.toList()); 
+    }
+         
+    
     private JavaFile buildInterfaceFile(TypeSpec typeSpec){
         return JavaFile.builder(DefaultPackage.ENTITY_DAO.packageName(), typeSpec)
                   .skipJavaLangImports(true)
                   .indent("\t")
                   .build();
     }
-        
+    
+  
    private void writeFile(JavaFile javaFile,ProcessingEnvironment processingEnv){
         try {
             javaFile.writeTo(filer);
@@ -146,48 +185,7 @@ public class DaoFactory{
     public void clearAnnotatedElements(){
         annotatedElements.clear();
     }
+     
     
-    private List<Element> getAnnotatedMethods(List<Element> elements){
-        return  elements.stream()
-                    .filter(e -> !e.getAnnotationMirrors().isEmpty())
-                    .collect(Collectors.toList()); 
-    }
-    
-    
-    private String daoClassParamCanonicalName(Element annotatedElement){
-        try{
-           DAO daoAnnotation = annotatedElement.getAnnotation(DAO.class);
-           return daoAnnotation.forClass().getCanonicalName();
-           
-        }catch (MirroredTypeException e) {
-            System.out.printf("[ZEUS] MIRRORED TYPE EXCEPTION: %s \n",e.getTypeMirror());
-            return e.getTypeMirror().toString();
-        }
- 
-    }
-    
-    
-    private MethodSpec buildAbstractMethods(Element executableElement,Element enclosingElement){
-        
-        ExecutableElement execElt = (ExecutableElement)executableElement;
-        
-        List<? extends VariableElement> params = execElt.getParameters();
-        List<ParameterSpec> paramsSpecs = params.stream().map(ParameterSpec::get).collect(Collectors.toList());
-        
-        TypeMirror returnType = execElt.getReturnType();
-        TypeName returnTypeName = ClassName.get(returnType);
-        
-        MethodSpec methodSpec = MethodSpec
-               .methodBuilder(execElt.getSimpleName().toString())
-               .addModifiers(Modifier.PUBLIC,Modifier.ABSTRACT)
-               .addParameters(paramsSpecs)
-               .returns(returnTypeName)
-               .build();
-       
-        return methodSpec;
-        
-    }
   
- 
- 
 }

@@ -17,6 +17,7 @@ import com.squareup.javapoet.TypeSpec;
 import io.quantum.annotation.DAOImpl;
 import io.quantum.annotation.QueryImpl;
 import io.quantum.annotation.util.DefaultPackage;
+import io.quantum.annotation.util.TypeNameUtils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +29,6 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeMirror;
@@ -123,9 +123,7 @@ public class DaoImplFactory {
                   .indent("\t")
                   .build();
     }
-  
     
-  
     public void add(Element annotatedElement){
         System.out.printf("[ZEUS] ANNOTATED ELT: %s \n",annotatedElement.toString());
         System.out.printf("[ZEUS] ANNOTATED ELT KIND: %s \n",annotatedElement.getKind().toString());
@@ -161,23 +159,6 @@ public class DaoImplFactory {
         }
  
     }
-    
-    private QueryImpl.Type annotationReturnTypeParam(Element annotatedElement){
-        try{
-           QueryImpl queryImplAnn = annotatedElement.getAnnotation(QueryImpl.class);
-           QueryImpl.Type type = queryImplAnn.returnType();
-           return type;
-           
-        }catch (MirroredTypeException e) {
-            System.out.printf("[ZEUS] MIRRORED TYPE EXCEPTION: %s \n",e.getTypeMirror());
-            QueryImpl queryImplAnn = typesUtils
-                    .asElement(e.getTypeMirror()).getAnnotation(QueryImpl.class);
-            QueryImpl.Type type = queryImplAnn.returnType();
-            System.out.printf("[ZEUS] DAO CLASS SIMPLE NAME : %s \n",type);
-            return type;
-        }
- 
-    }
         
     private String daoImplParamCanonicalName(Element annotatedElement){
         try{
@@ -190,8 +171,7 @@ public class DaoImplFactory {
         }
  
     }
-    
-    
+        
     private String queryImplParamCanonicalName(Element queryImplElement){
         QueryImpl queryImplAnnotation = queryImplElement.getAnnotation(QueryImpl.class);
         return queryImplAnnotation.queryName();
@@ -213,7 +193,7 @@ public class DaoImplFactory {
     private MethodSpec buildMethods(Element executableElement,Element enclosingElement){
         
         ExecutableElement execElt = (ExecutableElement)executableElement;
-        
+            
         TypeMirror returnType = execElt.getReturnType();
         TypeName returnTypeName = ClassName.get(returnType);
         
@@ -249,17 +229,20 @@ public class DaoImplFactory {
     }
     
     private CodeBlock returnStatement(ExecutableElement execElt,Element enclosingElement){
-       QueryImpl.Type type = annotationReturnTypeParam(execElt);
-        System.out.printf("[ZEUS] RETURN TYPE: %s\n",type);
-       switch(type){
-           case LIST:
-               return CodeBlock.builder().addStatement("return query.getResultList()").build();
-           case OPTIONAL:
-               return returnTypeCode(enclosingElement);
-       }
-       return CodeBlock.builder().addStatement("return query.getResultList()")
-               .build();
+        String qualifiedName = TypeNameUtils.returnTypeName(processingEnv, execElt);
+        System.out.printf("[ZEUS] -- RETURN TYPE NAME: %s \n",qualifiedName);
+        
+        switch(qualifiedName){
+            case "java.util.List":
+                 return CodeBlock.builder().addStatement("return query.getResultList()").build();
+            case "java.util.Optional":
+                return returnTypeCode(enclosingElement);
+            default:
+                return CodeBlock.builder().addStatement("return query.getResultList()").build();
+        }
+
     }
+
     
     private CodeBlock returnTypeCode(Element elt){
         String type = annotationClassParamSimpleName(elt);

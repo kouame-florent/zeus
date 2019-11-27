@@ -11,22 +11,30 @@ package io.quantum.annotation.util;
  */
 public enum DefaultType {
     
-    GENERIC_DAO("io.quantum.dao","GenericDAO"),
-    GENERIC_DAO_IMPL("io.quantum.dao","GenericDAOImpl");
+    GENERIC_DAO("io.quantum.dao","GenericDAO","io.quantum.dao.GenericDAO"),
+    GENERIC_DAO_IMPL("io.quantum.dao","GenericDAOImpl","io.quantum.dao.GenericDAOImpl"),
+    LIST("java.util","List","java.util.List"),
+    OPTIONAL("java.util","Optional","java.util.Optional");
       
     private final String packageName;
-    private final String entityName;
+    private final String className;
+    private final String qualifiedName;
     
-    private DefaultType(String pkgName,String entityName){
-        this.packageName = pkgName;
-        this.entityName = entityName;
+    private DefaultType(String packageName,String className,String qualifiedName){
+        this.packageName = packageName;
+        this.className = className;
+        this.qualifiedName = qualifiedName;
     }
 
     public String packageName() {
         return packageName;
     }
     
-    public String entityName(){
-        return entityName;
+    public String className(){
+        return className;
+    }
+    
+    public String qualifiedName(){
+        return qualifiedName;
     }
 }
