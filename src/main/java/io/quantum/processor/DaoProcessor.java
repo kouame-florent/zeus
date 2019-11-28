@@ -8,7 +8,6 @@ package io.quantum.processor;
 
 
 import io.quantum.annotation.DAO;
-import io.quantum.annotation.DAOImpl;
 import io.quantum.annotation.QueryImpl;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
@@ -24,6 +23,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
+
 
 /**
  *
@@ -67,7 +67,7 @@ public class DaoProcessor extends AbstractProcessor{
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         
-        roundEnv.getElementsAnnotatedWithAny(Set.of(DAO.class,DAOImpl.class,QueryImpl.class))
+        roundEnv.getElementsAnnotatedWithAny(Set.of(DAO.class,QueryImpl.class))
                 .stream()
                 .forEach(e -> {  
                     daoFactory.add(e);

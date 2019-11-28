@@ -14,7 +14,7 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import io.quantum.annotation.DAOImpl;
+import io.quantum.annotation.DAO;
 import io.quantum.annotation.QueryImpl;
 import io.quantum.annotation.util.DefaultPackage;
 import io.quantum.annotation.util.TypeNameUtils;
@@ -36,6 +36,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 
+
 /**
  *
  * @author root
@@ -47,7 +48,7 @@ public class DaoImplFactory {
     private final Messager messager;
     private final Types typesUtils;
     private final Elements elementsUtils;
-    private final Class<DAOImpl> acceptedClass = DAOImpl.class;
+    private final Class<DAO> acceptedClass = DAO.class;
     
     public List<Element> annotatedElements = new ArrayList<>();
     public List<Element> claimedElements = new ArrayList<>();
@@ -147,7 +148,7 @@ public class DaoImplFactory {
 
     private String annotationClassParamSimpleName(Element annotatedElement){
         try{
-           DAOImpl daoImplAnnotation = annotatedElement.getAnnotation(DAOImpl.class);
+           DAO daoImplAnnotation = annotatedElement.getAnnotation(DAO.class);
            String name = daoImplAnnotation.forClass().getSimpleName();
            return name;
            
@@ -162,7 +163,7 @@ public class DaoImplFactory {
         
     private String daoImplParamCanonicalName(Element annotatedElement){
         try{
-           DAOImpl daoImplAnnotation = annotatedElement.getAnnotation(DAOImpl.class);
+           DAO daoImplAnnotation = annotatedElement.getAnnotation(DAO.class);
            return daoImplAnnotation.forClass().getCanonicalName();
            
         }catch (MirroredTypeException e) {

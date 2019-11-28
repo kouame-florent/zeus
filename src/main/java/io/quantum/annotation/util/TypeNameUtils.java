@@ -33,6 +33,10 @@ public class TypeNameUtils {
         return env.getTypeUtils().getDeclaredType(typeElement).toString();
     }
     
+    public static String qualifiedName(ProcessingEnvironment env,TypeMirror typeMirror){
+        TypeElement typeElement = (TypeElement)env.getTypeUtils().asElement(typeMirror);
+        return env.getTypeUtils().getDeclaredType(typeElement).toString();
+    }
         
     public static boolean isPrimitive(TypeMirror type) {
         TypeKind kind = type.getKind();
