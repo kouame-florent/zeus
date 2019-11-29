@@ -127,7 +127,7 @@ public class DaoFactory{
            return daoAnnotation.forClass().getCanonicalName();
            
         }catch (MirroredTypeException e) {
-            System.out.printf("[ZEUS] MIRRORED TYPE EXCEPTION: %s \n",e.getTypeMirror());
+//            System.out.printf("[ZEUS] MIRRORED TYPE EXCEPTION: %s \n",e.getTypeMirror());
             return e.getTypeMirror().toString();
         }
  
@@ -139,16 +139,16 @@ public class DaoFactory{
     
     private String annotationClassParamSimpleName(Element annotatedElement){
         try{
-           System.out.printf("[ZEUS] annotated : %s \n",annotatedElement);
+//           System.out.printf("[ZEUS] annotated : %s \n",annotatedElement);
            DAO daoAnnotation = annotatedElement.getAnnotation(DAO.class);
            String name = daoAnnotation.forClass().getSimpleName();
-           System.out.printf("[ZEUS] DAO CLASS SIMPLE NAME : %s \n",name);
+//           System.out.printf("[ZEUS] DAO CLASS SIMPLE NAME : %s \n",name);
            return name;
            
         }catch (MirroredTypeException e) {
-            System.out.printf("[ZEUS] MIRRORED TYPE EXCEPTION: %s \n",e.getTypeMirror());
+//            System.out.printf("[ZEUS] MIRRORED TYPE EXCEPTION: %s \n",e.getTypeMirror());
             String name = typesUtils.asElement(e.getTypeMirror()).getSimpleName().toString();
-            System.out.printf("[ZEUS] DAO CLASS SIMPLE NAME : %s \n",name);
+//            System.out.printf("[ZEUS] DAO CLASS SIMPLE NAME : %s \n",name);
             return name;
         }
  
