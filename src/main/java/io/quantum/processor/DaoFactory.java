@@ -60,9 +60,9 @@ public class DaoFactory{
     
     public void generateCode(ProcessingEnvironment processingEnv){
        annotatedElements.stream()
-            .peek(elt -> System.out.printf("[ZEUS] BEFORE FILTER: %s\n",elt))
+//            .peek(elt -> System.out.printf("[ZEUS] BEFORE FILTER: %s\n",elt))
             .filter(elt -> isAccepted(elt))
-            .peek(elt -> System.out.printf("[ZEUS] AFTER FILTER: %s\n",elt))
+//            .peek(elt -> System.out.printf("[ZEUS] AFTER FILTER: %s\n",elt))
             .map(elt -> buildInterfaceBody(elt))
             .map(this::buildInterfaceFile)
             .forEach(jf -> writeFile(jf, processingEnv));

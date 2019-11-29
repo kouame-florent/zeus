@@ -26,14 +26,19 @@ public class TypeNameUtils {
     public static String declareTypeName(ProcessingEnvironment env,TypeElement typeElement){
         return env.getTypeUtils().getDeclaredType(typeElement).toString();
     } 
-    
-    public static String returnTypeName(ProcessingEnvironment env,ExecutableElement exec){
-        TypeMirror typeMirror = exec.getReturnType();
-        TypeElement typeElement = (TypeElement)env.getTypeUtils().asElement(typeMirror);
-        return env.getTypeUtils().getDeclaredType(typeElement).toString();
-    }
+//    
+//    public static String returnTypeName(ProcessingEnvironment env,ExecutableElement exec){
+//        TypeMirror typeMirror = exec.getReturnType();
+//        TypeElement typeElement = (TypeElement)env.getTypeUtils().asElement(typeMirror);
+//        return env.getTypeUtils().getDeclaredType(typeElement).toString();
+//    }
     
     public static String qualifiedName(ProcessingEnvironment env,TypeMirror typeMirror){
+        System.out.printf("[ZEUS] GETTING QUALIFIED NAME: %s \n",typeMirror);
+        if(isPrimitive(typeMirror)){
+            return env.getTypeUtils().getPrimitiveType(typeMirror.getKind()).toString();
+        }
+                
         TypeElement typeElement = (TypeElement)env.getTypeUtils().asElement(typeMirror);
         return env.getTypeUtils().getDeclaredType(typeElement).toString();
     }

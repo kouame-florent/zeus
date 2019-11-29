@@ -126,8 +126,8 @@ public class DaoImplFactory {
     }
     
     public void add(Element annotatedElement){
-        System.out.printf("[ZEUS] ANNOTATED ELT: %s \n",annotatedElement.toString());
-        System.out.printf("[ZEUS] ANNOTATED ELT KIND: %s \n",annotatedElement.getKind().toString());
+//        System.out.printf("[ZEUS] ANNOTATED ELT: %s \n",annotatedElement.toString());
+//        System.out.printf("[ZEUS] ANNOTATED ELT KIND: %s \n",annotatedElement.getKind().toString());
         if(annotatedElement.getKind() == ElementKind.INTERFACE){
             annotatedElements.add(annotatedElement);
         }
@@ -191,69 +191,126 @@ public class DaoImplFactory {
     }
    
   
-    private MethodSpec buildMethods(Element executableElement,Element enclosingElement){
+    private MethodSpec buildMethods(Element methodElt,Element enclosingElement){
         
-        ExecutableElement execElt = (ExecutableElement)executableElement;
+//        ExecutableElement execElt = (ExecutableElement)executableElement;
             
-        TypeMirror returnType = execElt.getReturnType();
-        TypeName returnTypeName = ClassName.get(returnType);
-        
-        List<? extends VariableElement> params = execElt.getParameters();
-        List<ParameterSpec> paramsSpecs = params.stream().map(ParameterSpec::get).collect(Collectors.toList());
-        
-        String entityCanonicalName = daoImplParamCanonicalName(enclosingElement);
-        
-        TypeName entityTypeName = 
-                ClassName.get(elementsUtils.getTypeElement(entityCanonicalName));
-        ClassName typedQueryClassName = ClassName.get("javax.persistence", "TypedQuery");
-
-        TypeName entityParameterizedTypeName = ParameterizedTypeName.get(typedQueryClassName, entityTypeName);
-        
-        String namedQuery = queryImplParamCanonicalName(executableElement);
+//        TypeMirror returnType = execElt.getReturnType();
+//        TypeName returnTypeName = ClassName.get(returnType);
+//        
+//        List<? extends VariableElement> params = execElt.getParameters();
+//        List<ParameterSpec> paramsSpecs = params.stream().map(ParameterSpec::get).collect(Collectors.toList());
+//        
+//        String entityCanonicalName = daoImplParamCanonicalName(enclosingElement);
+//        
+//        TypeName entityTypeName = ClassName.get(elementsUtils.getTypeElement(entityCanonicalName));
+//        ClassName typedQueryClassName = ClassName.get("javax.persistence", "TypedQuery");
+//
+//        TypeName entityParameterizedTypeName = ParameterizedTypeName.get(typedQueryClassName, entityTypeName);
+//        
+//        String namedQuery = queryImplParamCanonicalName(methodElt);
                 
         MethodSpec methodSpec = MethodSpec
-               .methodBuilder(execElt.getSimpleName().toString())
+               .methodBuilder(methodElt.getSimpleName().toString())
                .addModifiers(Modifier.PUBLIC)
                .addAnnotation(Override.class)
-               .addParameters(paramsSpecs)
-               .addStatement("$T query = em.createNamedQuery($S, $L)",
-                       entityParameterizedTypeName,namedQuery,entityTypeName.toString()+".class")
-               .addCode(addCodeBlock(executableElement))
-               .addCode(returnStatement(execElt,enclosingElement))
+               .addParameters(parameters(methodElt))
+//               .addStatement("$T query = em.createNamedQuery($S, $L)",
+//                       entityParameterizedTypeName,namedQuery,entityTypeName.toString()+".class")
+               .addCode(addCodeBlock(methodElt))
+               .addCode(returnStatement(methodElt))
                
 //               .addStatement(DefaultStatement.UNSUPPORTED_OPERATION_EXCEPTION.statement())
-               .returns(returnTypeName)
+               .returns(returnType(methodElt))
                .build();
        
         return methodSpec;
     
     }
     
-    private CodeBlock returnStatement(ExecutableElement execElt,Element enclosingElement){
-        String qualifiedName = TypeNameUtils.returnTypeName(processingEnv, execElt);
+    private List<ParameterSpec> parameters(Element methodElt){
+        ExecutableElement execElt = (ExecutableElement)methodElt;
+        List<? extends VariableElement> params = execElt.getParameters();
+        return params.stream().map(ParameterSpec::get).collect(Collectors.toList());
+    }
+    
+    private TypeName returnType(Element methodElt){
+        ExecutableElement execElt = (ExecutableElement)methodElt;
+        TypeMirror returnType = execElt.getReturnType();
+        return ClassName.get(returnType);
+    
+    } 
+    
+    private CodeBlock returnStatement(Element methodElt){
+        ExecutableElement execElt = (ExecutableElement)methodElt;
+        String qualifiedName = TypeNameUtils.qualifiedName(processingEnv,execElt.getReturnType());
         System.out.printf("[ZEUS] -- RETURN TYPE NAME: %s \n",qualifiedName);
         
         switch(qualifiedName){
             case "java.util.List":
-                 return CodeBlock.builder().addStatement("return query.getResultList()").build();
+                 return listReturnCode(methodElt);
             case "java.util.Optional":
-                return returnTypeCode(enclosingElement);
+                return optionalReturnCode(methodElt);
+            case "int":
+                return intReturnCode(methodElt);
             default:
-                return CodeBlock.builder().addStatement("return query.getResultList()").build();
+                return listReturnCode(methodElt);
         }
+        
+//        return CodeBlock.builder().addStatement("return query.getResultList()").build();
 
     }
-
     
-    private CodeBlock returnTypeCode(Element elt){
+    
+    private CodeBlock listReturnCode(Element elt){
+        String entityCanonicalName = daoImplParamCanonicalName(elt);
+        
+        TypeName entityTypeName = ClassName.get(elementsUtils.getTypeElement(entityCanonicalName));
+        ClassName typedQueryClassName = ClassName.get("javax.persistence", "TypedQuery");
+
+        TypeName entityParameterizedTypeName = ParameterizedTypeName.get(typedQueryClassName, entityTypeName);
+        String namedQuery = queryImplParamCanonicalName(elt);
+        
         String type = annotationClassParamSimpleName(elt);
         ClassName listClassName = ClassName.get(List.class);
         return CodeBlock.builder()
-                .addStatement("$T<$L> results =  query.getResultList()",listClassName,type)
-                .beginControlFlow("if(!results.isEmpty())")
-                .addStatement("return Optional.of(results.get(0))")
-                .endControlFlow()
-                .addStatement("return Optional.empty()")
+            .addStatement("$T query = em.createNamedQuery($S, $L)",
+                   entityParameterizedTypeName,namedQuery,entityTypeName.toString()+".class")
+            .addStatement("$T<$L> results =  query.getResultList()",listClassName,type)
+            .addStatement("return query.getResultList()")
+            .build();
+    }
+
+    
+    private CodeBlock optionalReturnCode(Element elt){
+        
+        String entityCanonicalName = daoImplParamCanonicalName(elt);
+        
+        TypeName entityTypeName = ClassName.get(elementsUtils.getTypeElement(entityCanonicalName));
+        ClassName typedQueryClassName = ClassName.get("javax.persistence", "TypedQuery");
+
+        TypeName entityParameterizedTypeName = ParameterizedTypeName.get(typedQueryClassName, entityTypeName);
+        String namedQuery = queryImplParamCanonicalName(elt);
+        
+        String type = annotationClassParamSimpleName(elt);
+        ClassName listClassName = ClassName.get(List.class);
+        return CodeBlock.builder()
+            .addStatement("$T query = em.createNamedQuery($S, $L)",
+                   entityParameterizedTypeName,namedQuery,entityTypeName.toString()+".class")
+            .addStatement("$T<$L> results =  query.getResultList()",listClassName,type)
+            .beginControlFlow("if(!results.isEmpty())")
+            .addStatement("return Optional.of(results.get(0))")
+            .endControlFlow()
+            .addStatement("return Optional.empty()")
+            .build();
+    }
+    
+    private CodeBlock intReturnCode(Element elt){
+        
+        String namedQuery = queryImplParamCanonicalName(elt);
+        return CodeBlock.builder()
+                .addStatement("Query query = em.query($L)",namedQuery)
+                .addStatement("return (Integer)query.getSingleResult()")
                 .build();
     }
     
