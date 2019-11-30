@@ -67,7 +67,7 @@ public class DaoImplFactory extends DaoBaseFactory{
         ClassName entityDaoClassName = ClassName.get(DefaultPackage.ENTITY_DAO.packageName(), 
                 entityDaoName);
         
-        String entityCanonicalName = daoAnnotationParamName(element);
+        String entityCanonicalName = daoAnnotationClassParamName(element);
         
         TypeName entityTypeName = 
                 ClassName.get(elementsUtils.getTypeElement(entityCanonicalName));
@@ -120,19 +120,15 @@ public class DaoImplFactory extends DaoBaseFactory{
     }
     
     private String targetClassName(Element interfaceElement){
-        return daoAnnotationParamSimpleName(interfaceElement) + "DAO" + "Impl";
+        return daoAnnotationClassParamSimpleName(interfaceElement) + "DAO" + "Impl";
     }
     
     private String targetSuperInterfaceName(Element interfaceElement){
-        return daoAnnotationParamSimpleName(interfaceElement) + "DAO";
+        return daoAnnotationClassParamSimpleName(interfaceElement) + "DAO";
     }
 
         
-    private String queryImplParamCanonicalName(Element queryImplElement){
-//        System.out.printf("[ZEUS] MIRRORED TYPE EXCEPTION: %s \n",e.getTypeMirror());
-        Impl queryImplAnnotation = queryImplElement.getAnnotation(Impl.class);
-        return queryImplAnnotation.queryName();
-    }
+   
     
     private List<Element> getNotAnnotatedMethods(List<Element> elements){
         return  elements.stream()
@@ -206,15 +202,15 @@ public class DaoImplFactory extends DaoBaseFactory{
         
         System.out.printf("[ZEUS] -- ENCLOSING ELEMENT: %s \n",enclosingElement);
         
-        String entityCanonicalName = daoAnnotationParamName(enclosingElement);
+        String entityCanonicalName = daoAnnotationClassParamName(enclosingElement);
         
         TypeName entityTypeName = ClassName.get(elementsUtils.getTypeElement(entityCanonicalName));
         ClassName typedQueryClassName = ClassName.get("javax.persistence", "TypedQuery");
 
         TypeName entityParameterizedTypeName = ParameterizedTypeName.get(typedQueryClassName, entityTypeName);
-        String namedQuery = queryImplParamCanonicalName(methodElt);
+        String namedQuery = implAnnotationParamName(methodElt);
         
-        String type = daoAnnotationParamSimpleName(enclosingElement);
+        String type = daoAnnotationClassParamSimpleName(enclosingElement);
 //        ClassName listClassName = ClassName.get(List.class);
         return CodeBlock.builder()
             .addStatement("$T query = em.createNamedQuery($S, $L)",entityParameterizedTypeName,namedQuery,entityTypeName.toString()+".class")
@@ -230,15 +226,15 @@ public class DaoImplFactory extends DaoBaseFactory{
     private CodeBlock optionalReturnCode(Element methodElt){
         
         Element enclosingElement = methodElt.getEnclosingElement();
-        String entityCanonicalName = daoAnnotationParamName(enclosingElement);
+        String entityCanonicalName = daoAnnotationClassParamName(enclosingElement);
         
         TypeName entityTypeName = ClassName.get(elementsUtils.getTypeElement(entityCanonicalName));
         ClassName typedQueryClassName = ClassName.get("javax.persistence", "TypedQuery");
 
         TypeName entityParameterizedTypeName = ParameterizedTypeName.get(typedQueryClassName, entityTypeName);
-        String namedQuery = queryImplParamCanonicalName(methodElt);
+        String namedQuery = implAnnotationParamName(methodElt);
         
-        String type = daoAnnotationParamSimpleName(enclosingElement);
+        String type = daoAnnotationClassParamSimpleName(enclosingElement);
         ClassName listClassName = ClassName.get(List.class);
         return CodeBlock.builder()
             .addStatement("$T query = em.createNamedQuery($S, $L)",
@@ -254,7 +250,7 @@ public class DaoImplFactory extends DaoBaseFactory{
     
     private CodeBlock intReturnCode(Element methodElt){
         Element enclosingElement = methodElt.getEnclosingElement();
-        String namedQuery = queryImplParamCanonicalName(methodElt);
+        String namedQuery = implAnnotationParamName(methodElt);
         ClassName typedQueryClassName = ClassName.get("javax.persistence", "Query");
          
         return CodeBlock.builder()

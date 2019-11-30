@@ -61,7 +61,7 @@ public class DaoFactory extends DaoBaseFactory{
                 DefaultType.GENERIC_DAO.className());
         
         TypeName entityTypeName = 
-                ClassName.get(elementsUtils.getTypeElement(daoAnnotationParamName(element)));
+                ClassName.get(elementsUtils.getTypeElement(daoAnnotationClassParamName(element)));
         
         List<Element> enclosedElements = (List<Element>) element.getEnclosedElements()
                 .stream().filter(e -> e.getKind() == ElementKind.METHOD)
@@ -104,7 +104,7 @@ public class DaoFactory extends DaoBaseFactory{
     
    
     private String targetClassName(Element interfaceElement){
-        return daoAnnotationParamSimpleName(interfaceElement) + "DAO";
+        return daoAnnotationClassParamSimpleName(interfaceElement) + "DAO";
     }
     
     private List<Element> getAnnotatedMethods(List<Element> elements){

@@ -6,6 +6,7 @@
 package io.quantum.processor;
 
 import io.quantum.annotation.DAO;
+import io.quantum.annotation.Impl;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -35,7 +36,7 @@ public abstract class DaoBaseFactory {
         this.typesUtils = processingEnv.getTypeUtils();
     }
         
-    protected String daoAnnotationParamName(Element annotatedElement){
+    protected String daoAnnotationClassParamName(Element annotatedElement){
         try{
            DAO daoAnnotation = annotatedElement.getAnnotation(DAO.class);
            return daoAnnotation.forClass().getCanonicalName();
@@ -46,19 +47,23 @@ public abstract class DaoBaseFactory {
  
     }
      
-    protected String daoAnnotationParamSimpleName(Element annotatedElement){
+    protected String daoAnnotationClassParamSimpleName(Element annotatedElement){
         try{
            DAO daoAnnotation = annotatedElement.getAnnotation(DAO.class);
            String name = daoAnnotation.forClass().getSimpleName();
            return name;
            
         }catch (MirroredTypeException e) {
-
-            String name = typesUtils.asElement(e.getTypeMirror()).getSimpleName().toString();
-
-            return name;
+           String name = typesUtils.asElement(e.getTypeMirror()).getSimpleName().toString();
+           return name;
         }
  
+    }
+    
+    protected String implAnnotationParamName(Element annotatedElement){
+        Impl implAnnotation = annotatedElement.getAnnotation(Impl.class);
+        return implAnnotation.queryName();
+      
     }
     
 }
