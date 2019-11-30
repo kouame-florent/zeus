@@ -28,7 +28,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
-import io.quantum.annotation.Impl;
+import io.quantum.annotation.Query;
 
 
 /**
@@ -126,9 +126,6 @@ public class DaoImplFactory extends DaoBaseFactory{
     private String targetSuperInterfaceName(Element interfaceElement){
         return daoAnnotationClassParamSimpleName(interfaceElement) + "DAO";
     }
-
-        
-   
     
     private List<Element> getNotAnnotatedMethods(List<Element> elements){
         return  elements.stream()

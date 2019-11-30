@@ -22,7 +22,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
-import io.quantum.annotation.Impl;
+import io.quantum.annotation.Query;
 
 
 /**
@@ -67,7 +67,7 @@ public class DaoProcessor extends AbstractProcessor{
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         
-        roundEnv.getElementsAnnotatedWithAny(Set.of(DAO.class,Impl.class))
+        roundEnv.getElementsAnnotatedWithAny(Set.of(DAO.class,Query.class))
                 .stream()
                 .forEach(e -> {  
                     daoFactory.add(e);

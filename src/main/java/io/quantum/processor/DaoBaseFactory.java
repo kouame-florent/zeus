@@ -6,7 +6,6 @@
 package io.quantum.processor;
 
 import io.quantum.annotation.DAO;
-import io.quantum.annotation.Impl;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -14,6 +13,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import io.quantum.annotation.Query;
 
 /**
  *
@@ -61,8 +61,8 @@ public abstract class DaoBaseFactory {
     }
     
     protected String implAnnotationParamName(Element annotatedElement){
-        Impl implAnnotation = annotatedElement.getAnnotation(Impl.class);
-        return implAnnotation.queryName();
+        Query implAnnotation = annotatedElement.getAnnotation(Query.class);
+        return implAnnotation.name();
       
     }
     
