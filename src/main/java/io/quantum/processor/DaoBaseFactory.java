@@ -5,17 +5,14 @@
  */
 package io.quantum.processor;
 
-import com.squareup.javapoet.JavaFile;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import io.quantum.annotation.DAO;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
-import javax.lang.model.type.DeclaredType;
-import javax.tools.Diagnostic;
+import javax.lang.model.type.MirroredTypeException;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 
 /**
  *
@@ -23,42 +20,45 @@ import javax.tools.Diagnostic;
  */
 public abstract class DaoBaseFactory {
     
-//    protected final Filer filer;
-//    private final Messager messager;
-//    private static final String ENTITY_ANNOTATION_FQCN = "javax.persistence.Entity";
-//    
-//    public List<Element> annotatedElements = new ArrayList<>();
-//    public List<Element> badAnnotatedElements = new ArrayList<>();
-////
-//    public DaoBaseFactory(Filer filer, Messager messager) {
-//        this.filer = filer;
-//        this.messager = messager;
-//    }
-//        
-//    
-//    boolean isEntity(Element element){
-//        return element.getAnnotationMirrors()
-//                .stream().map(AnnotationMirror::getAnnotationType)
-//                .map(DeclaredType::toString)
-//                .anyMatch(n -> n.equalsIgnoreCase(ENTITY_ANNOTATION_FQCN));
-//    }
-//    
-//    abstract JavaFile buildCode(Element element);
-//   
-//    void generateCode(ProcessingEnvironment processingEnv){
-//        annotatedElements.stream()
-//            .filter(this::isEntity)
-//            .map(e -> buildCode(e))
-//            .forEach(jf -> writeFile(jf, processingEnv));
-//    }
-//    
-//    void writeFile(JavaFile javaFile,ProcessingEnvironment processingEnv){
-//        try {
-//           
-//            javaFile.writeTo(filer);
-//        } catch (IOException ex) {
-//            System.out.printf("[Zeus] File already generated! %s",ex);
-//            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,"[Zeus] File already generated! ");
-//        }
-//    }
+    protected final ProcessingEnvironment processingEnv;
+    protected final Filer filer;
+    protected final Messager messager;
+    protected final Types typesUtils;
+    protected final Elements elementsUtils;
+    protected final Class<DAO> acceptedClass = DAO.class;
+
+    public DaoBaseFactory(ProcessingEnvironment processingEnv) {
+        this.processingEnv = processingEnv;
+        this.filer = processingEnv.getFiler();
+        this.messager = processingEnv.getMessager();
+        this.elementsUtils = processingEnv.getElementUtils();
+        this.typesUtils = processingEnv.getTypeUtils();
+    }
+        
+    protected String daoAnnotationParamName(Element annotatedElement){
+        try{
+           DAO daoAnnotation = annotatedElement.getAnnotation(DAO.class);
+           return daoAnnotation.forClass().getCanonicalName();
+           
+        }catch (MirroredTypeException e) {
+            return e.getTypeMirror().toString();
+        }
+ 
+    }
+     
+    protected String daoAnnotationParamSimpleName(Element annotatedElement){
+        try{
+           DAO daoAnnotation = annotatedElement.getAnnotation(DAO.class);
+           String name = daoAnnotation.forClass().getSimpleName();
+           return name;
+           
+        }catch (MirroredTypeException e) {
+
+            String name = typesUtils.asElement(e.getTypeMirror()).getSimpleName().toString();
+
+            return name;
+        }
+ 
+    }
+    
 }

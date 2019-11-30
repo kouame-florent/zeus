@@ -14,51 +14,34 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import io.quantum.annotation.DAO;
-import io.quantum.annotation.QueryImpl;
 import io.quantum.annotation.util.DefaultPackage;
 import io.quantum.annotation.util.TypeNameUtils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.annotation.processing.Filer;
-import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
+import io.quantum.annotation.Impl;
 
 
 /**
  *
  * @author root
  */
-public class DaoImplFactory {
-    
-    private final ProcessingEnvironment processingEnv;
-    private final Filer filer;
-    private final Messager messager;
-    private final Types typesUtils;
-    private final Elements elementsUtils;
-    private final Class<DAO> acceptedClass = DAO.class;
-    
+public class DaoImplFactory extends DaoBaseFactory{
+ 
     public List<Element> annotatedElements = new ArrayList<>();
     public List<Element> claimedElements = new ArrayList<>();
 
     public DaoImplFactory(ProcessingEnvironment processingEnv) {
-        this.processingEnv = processingEnv;
-        this.filer = processingEnv.getFiler();
-        this.messager = processingEnv.getMessager();
-        this.elementsUtils = processingEnv.getElementUtils();
-        this.typesUtils = processingEnv.getTypeUtils();
+        super(processingEnv);
     }
  
     
@@ -84,7 +67,7 @@ public class DaoImplFactory {
         ClassName entityDaoClassName = ClassName.get(DefaultPackage.ENTITY_DAO.packageName(), 
                 entityDaoName);
         
-        String entityCanonicalName = daoImplParamCanonicalName(element);
+        String entityCanonicalName = daoAnnotationParamName(element);
         
         TypeName entityTypeName = 
                 ClassName.get(elementsUtils.getTypeElement(entityCanonicalName));
@@ -137,49 +120,19 @@ public class DaoImplFactory {
     }
     
     private String targetClassName(Element interfaceElement){
-        return annotationClassParamSimpleName(interfaceElement) + "DAO" + "Impl";
+        return daoAnnotationParamSimpleName(interfaceElement) + "DAO" + "Impl";
     }
     
     private String targetSuperInterfaceName(Element interfaceElement){
-        return annotationClassParamSimpleName(interfaceElement) + "DAO";
+        return daoAnnotationParamSimpleName(interfaceElement) + "DAO";
     }
-    
-    private String annotationClassParamSimpleName(Element annotatedElement){
-        try{
-           DAO daoImplAnnotation = annotatedElement.getAnnotation(DAO.class);
-           String name = daoImplAnnotation.forClass().getSimpleName();
-           return name;
-           
-        }catch (MirroredTypeException e) {
-//            System.out.printf("[ZEUS] MIRRORED TYPE EXCEPTION: %s \n",e.getTypeMirror());
-            String name = typesUtils.asElement(e.getTypeMirror()).getSimpleName().toString();
-//            System.out.printf("[ZEUS] DAO CLASS SIMPLE NAME : %s \n",name);
-            return name;
-        }
- 
-    }
+
         
-    private String daoImplParamCanonicalName(Element annotatedElement){
-        try{
-           System.out.printf("[ZEUS] ANNOTATED ELEMENT: %s \n",annotatedElement);
-           DAO daoImplAnnotation = annotatedElement.getAnnotation(DAO.class);
-           System.out.printf("[ZEUS] DAO CLASS: %s \n",daoImplAnnotation);
-           Class clazz = daoImplAnnotation.forClass();
-           System.out.printf("[ZEUS] DAO FOR CLASS: %s \n",clazz);
-           return daoImplAnnotation.forClass().getCanonicalName();
-           
-        }catch (MirroredTypeException e) {
-            System.out.printf("[ZEUS] MIRRORED TYPE EXCEPTION: %s \n",e.getTypeMirror());
-            return e.getTypeMirror().toString();
-        }
- 
-    }
-        
-//    private String queryImplParamCanonicalName(Element queryImplElement){
+    private String queryImplParamCanonicalName(Element queryImplElement){
 //        System.out.printf("[ZEUS] MIRRORED TYPE EXCEPTION: %s \n",e.getTypeMirror());
-//        QueryImpl queryImplAnnotation = queryImplElement.getAnnotation(QueryImpl.class);
-//        return queryImplAnnotation.queryName();
-//    }
+        Impl queryImplAnnotation = queryImplElement.getAnnotation(Impl.class);
+        return queryImplAnnotation.queryName();
+    }
     
     private List<Element> getNotAnnotatedMethods(List<Element> elements){
         return  elements.stream()
@@ -224,21 +177,23 @@ public class DaoImplFactory {
     
     private CodeBlock addCodeBlockStatement(Element methodElt){
         ExecutableElement execElt = (ExecutableElement)methodElt;
-        String qualifiedName = TypeNameUtils.qualifiedName(processingEnv,execElt.getReturnType());
-        System.out.printf("[ZEUS] -- RETURN TYPE NAME: %s \n",qualifiedName);
+        TypeMirror returnType = execElt.getReturnType();
+        String qualifiedName = TypeNameUtils.isPrimitive(returnType) ? 
+                TypeNameUtils.getDeclaredTypeName(processingEnv, returnType, true) : 
+                TypeNameUtils.getDeclaredTypeName(processingEnv, returnType, false);
+ 
+       System.out.printf("[ZEUS] -- RETURN TYPE NAME: %s \n",qualifiedName);
         
         switch(qualifiedName){
             case "java.util.List":
                  return listReturnCode(methodElt);
             case "java.util.Optional":
                 return optionalReturnCode(methodElt);
-            case "int":
+            case "java.lang.Integer":
                 return intReturnCode(methodElt);
             default:
                 return listReturnCode(methodElt);
         }
-        
-//        return CodeBlock.builder().addStatement("return query.getResultList()").build();
 
     }
   
@@ -251,15 +206,15 @@ public class DaoImplFactory {
         
         System.out.printf("[ZEUS] -- ENCLOSING ELEMENT: %s \n",enclosingElement);
         
-        String entityCanonicalName = daoImplParamCanonicalName(enclosingElement);
+        String entityCanonicalName = daoAnnotationParamName(enclosingElement);
         
         TypeName entityTypeName = ClassName.get(elementsUtils.getTypeElement(entityCanonicalName));
         ClassName typedQueryClassName = ClassName.get("javax.persistence", "TypedQuery");
 
         TypeName entityParameterizedTypeName = ParameterizedTypeName.get(typedQueryClassName, entityTypeName);
-        String namedQuery = daoImplParamCanonicalName(enclosingElement);
+        String namedQuery = queryImplParamCanonicalName(methodElt);
         
-        String type = annotationClassParamSimpleName(enclosingElement);
+        String type = daoAnnotationParamSimpleName(enclosingElement);
 //        ClassName listClassName = ClassName.get(List.class);
         return CodeBlock.builder()
             .addStatement("$T query = em.createNamedQuery($S, $L)",entityParameterizedTypeName,namedQuery,entityTypeName.toString()+".class")
@@ -275,15 +230,15 @@ public class DaoImplFactory {
     private CodeBlock optionalReturnCode(Element methodElt){
         
         Element enclosingElement = methodElt.getEnclosingElement();
-        String entityCanonicalName = daoImplParamCanonicalName(enclosingElement);
+        String entityCanonicalName = daoAnnotationParamName(enclosingElement);
         
         TypeName entityTypeName = ClassName.get(elementsUtils.getTypeElement(entityCanonicalName));
         ClassName typedQueryClassName = ClassName.get("javax.persistence", "TypedQuery");
 
         TypeName entityParameterizedTypeName = ParameterizedTypeName.get(typedQueryClassName, entityTypeName);
-        String namedQuery = daoImplParamCanonicalName(enclosingElement);
+        String namedQuery = queryImplParamCanonicalName(methodElt);
         
-        String type = annotationClassParamSimpleName(enclosingElement);
+        String type = daoAnnotationParamSimpleName(enclosingElement);
         ClassName listClassName = ClassName.get(List.class);
         return CodeBlock.builder()
             .addStatement("$T query = em.createNamedQuery($S, $L)",
@@ -299,10 +254,11 @@ public class DaoImplFactory {
     
     private CodeBlock intReturnCode(Element methodElt){
         Element enclosingElement = methodElt.getEnclosingElement();
-        String namedQuery = daoImplParamCanonicalName(enclosingElement);
-        
+        String namedQuery = queryImplParamCanonicalName(methodElt);
+        ClassName typedQueryClassName = ClassName.get("javax.persistence", "Query");
+         
         return CodeBlock.builder()
-                .addStatement("Query query = em.query($L)",namedQuery)
+                .addStatement("$T query = em.createNamedQuery($S)",typedQueryClassName,namedQuery)
                 .add(paramsBlock(methodElt))
                 .addStatement("return (Integer)query.getSingleResult()")
                 .build();

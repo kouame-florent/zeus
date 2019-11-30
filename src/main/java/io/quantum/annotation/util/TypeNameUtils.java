@@ -10,9 +10,8 @@ import com.squareup.javapoet.TypeName;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -23,25 +22,29 @@ import javax.lang.model.type.TypeMirror;
  */
 public class TypeNameUtils {
     
-    public static String declareTypeName(ProcessingEnvironment env,TypeElement typeElement){
-        return env.getTypeUtils().getDeclaredType(typeElement).toString();
-    } 
-//    
-//    public static String returnTypeName(ProcessingEnvironment env,ExecutableElement exec){
-//        TypeMirror typeMirror = exec.getReturnType();
-//        TypeElement typeElement = (TypeElement)env.getTypeUtils().asElement(typeMirror);
-//        return env.getTypeUtils().getDeclaredType(typeElement).toString();
-//    }
-    
-    public static String qualifiedName(ProcessingEnvironment env,TypeMirror typeMirror){
-        System.out.printf("[ZEUS] GETTING QUALIFIED NAME: %s \n",typeMirror);
-        if(isPrimitive(typeMirror)){
-            return env.getTypeUtils().getPrimitiveType(typeMirror.getKind()).toString();
+    public static String getDeclaredTypeName(ProcessingEnvironment processingEnv, 
+            TypeMirror type, boolean box) {
+        
+        if (type == null || type.getKind() == TypeKind.NULL
+                || type.getKind() == TypeKind.WILDCARD) {
+            return "java.lang.Object";
         }
-                
-        TypeElement typeElement = (TypeElement)env.getTypeUtils().asElement(typeMirror);
-        return env.getTypeUtils().getDeclaredType(typeElement).toString();
+        if (type.getKind() == TypeKind.ARRAY) {
+            TypeMirror comp = ((ArrayType) type).getComponentType();
+            return getDeclaredTypeName(processingEnv, comp, false);
+        }
+
+        if (box && isPrimitive(type)) {
+            type = processingEnv.getTypeUtils()
+                    .boxedClass((PrimitiveType) type).asType();
+        }
+        if (isPrimitive(type)) {
+            return ((PrimitiveType) type).toString();
+        }
+        return processingEnv.getTypeUtils().asElement(type).toString();
     }
+    
+
         
     public static boolean isPrimitive(TypeMirror type) {
         TypeKind kind = type.getKind();
@@ -83,5 +86,7 @@ public class TypeNameUtils {
         }
         return (PackageElement) type;
       }
+    
+   
    
 }

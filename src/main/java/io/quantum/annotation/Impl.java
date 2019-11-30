@@ -16,7 +16,7 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.SOURCE)
-public @interface QueryImpl {
+public @interface Impl {
     String queryName() ;
 //    Type returnType() ;
     
