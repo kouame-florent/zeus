@@ -73,7 +73,6 @@ public class DaoFactory extends DaoBaseFactory{
                 .map(e -> buildAbstractMethods(e)).collect(Collectors.toList());
              
         TypeSpec daoInterface = TypeSpec.interfaceBuilder(daoInterfaceName)
-//                .addSuperinterface(daoInterfaceClassName)
                 .addSuperinterface(ParameterizedTypeName.get(genricDao,entityTypeName,TypeName.get(String.class)))
                 .addModifiers(Modifier.PUBLIC)
                 .addMethods(methods)
@@ -105,8 +104,7 @@ public class DaoFactory extends DaoBaseFactory{
         return methodSpec;
         
     }
-    
-   
+       
     private String targetClassName(Element interfaceElement){
         return daoAnnotationClassParamSimpleName(interfaceElement) + "DAO";
     }
@@ -133,8 +131,7 @@ public class DaoFactory extends DaoBaseFactory{
             processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,"[Zeus] File already generated! ");
         }
     }
-   
-
+ 
     public void add(Element element){
         annotatedElements.add(element);
     }

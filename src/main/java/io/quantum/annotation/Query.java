@@ -18,7 +18,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 public @interface Query {
     String name();
-    boolean withInterface() default true;
-    boolean withImplementation() default true;
+    boolean impl() default true;
     
 }
