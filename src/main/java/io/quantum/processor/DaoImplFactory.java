@@ -102,7 +102,7 @@ public class DaoImplFactory extends DaoBaseFactory{
     
     private JavaFile buildClassFile(TypeSpec typeSpec){
         return JavaFile.builder(DefaultPackage.ENTITY_DAO_IMPL.packageName(), typeSpec)
-                  .skipJavaLangImports(true)
+                  .skipJavaLangImports(true) 
                   .indent("\t")
                   .build();
     }
@@ -184,6 +184,10 @@ public class DaoImplFactory extends DaoBaseFactory{
                 return optionalReturnCode(methodElt);
             case "java.lang.Integer":
                 return intReturnCode(methodElt);
+            case "java.lang.Long":
+                return longReturnCode(methodElt);
+            case "java.lang.Double":
+                return doubleReturnCode(methodElt);
             default:
                 return listReturnCode(methodElt);
         }
@@ -246,7 +250,6 @@ public class DaoImplFactory extends DaoBaseFactory{
     }
     
     private CodeBlock intReturnCode(Element methodElt){
-        Element enclosingElement = methodElt.getEnclosingElement();
         String namedQuery = implAnnotationParamName(methodElt);
         ClassName typedQueryClassName = ClassName.get("javax.persistence", "Query");
          
@@ -254,6 +257,28 @@ public class DaoImplFactory extends DaoBaseFactory{
                 .addStatement("$T query = em.createNamedQuery($S)",typedQueryClassName,namedQuery)
                 .add(paramsBlock(methodElt))
                 .addStatement("return (Integer)query.getSingleResult()")
+                .build();
+    }
+    
+    private CodeBlock longReturnCode(Element methodElt){
+        String namedQuery = implAnnotationParamName(methodElt);
+        ClassName typedQueryClassName = ClassName.get("javax.persistence", "Query");
+         
+        return CodeBlock.builder()
+                .addStatement("$T query = em.createNamedQuery($S)",typedQueryClassName,namedQuery)
+                .add(paramsBlock(methodElt))
+                .addStatement("return (Long)query.getSingleResult()")
+                .build();
+    }
+    
+     private CodeBlock doubleReturnCode(Element methodElt){
+        String namedQuery = implAnnotationParamName(methodElt);
+        ClassName typedQueryClassName = ClassName.get("javax.persistence", "Query");
+         
+        return CodeBlock.builder()
+                .addStatement("$T query = em.createNamedQuery($S)",typedQueryClassName,namedQuery)
+                .add(paramsBlock(methodElt))
+                .addStatement("return (Double)query.getSingleResult()")
                 .build();
     }
     

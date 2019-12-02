@@ -23,6 +23,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
@@ -57,6 +58,7 @@ public class DaoFactory extends DaoBaseFactory{
     TypeSpec buildInterfaceBody(Element element) {
       
         String daoInterfaceName = targetClassName(element);
+//        ClassName daoInterfaceClassName = ClassName.get((TypeElement)element);
         ClassName genricDao = ClassName.get(DefaultType.GENERIC_DAO.packageName(),
                 DefaultType.GENERIC_DAO.className());
         
@@ -71,6 +73,7 @@ public class DaoFactory extends DaoBaseFactory{
                 .map(e -> buildAbstractMethods(e)).collect(Collectors.toList());
              
         TypeSpec daoInterface = TypeSpec.interfaceBuilder(daoInterfaceName)
+//                .addSuperinterface(daoInterfaceClassName)
                 .addSuperinterface(ParameterizedTypeName.get(genricDao,entityTypeName,TypeName.get(String.class)))
                 .addModifiers(Modifier.PUBLIC)
                 .addMethods(methods)
@@ -94,6 +97,7 @@ public class DaoFactory extends DaoBaseFactory{
         MethodSpec methodSpec = MethodSpec
                .methodBuilder(execElt.getSimpleName().toString())
                .addModifiers(Modifier.PUBLIC,Modifier.ABSTRACT)
+//               .addAnnotation(Override.class)
                .addParameters(paramsSpecs)
                .returns(returnTypeName)
                .build();
